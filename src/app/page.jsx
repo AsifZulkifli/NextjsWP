@@ -8,73 +8,74 @@ gsap.registerPlugin(ScrollTrigger);
 
 const CARDS = [
   {
-    number: "01",
-    title: "Discover",
-    desc: "We research and understand your goals, audience, and the landscape around your product.",
-    bg: "bg-indigo-600",
+    title: "Park Connector",
+    subtitle: "1KM-Long Linkage",
+    subtitleSuffix: "to the Heart of the City",
+    desc: "The Park Connector seamlessly links you to a vibrant community, lush green spaces, and modern amenities — now just 1km closer to you.",
+    img: "/menu-bg.jpg",
+    label: "Actual Photo",
   },
   {
-    number: "02",
-    title: "Design",
-    desc: "Crafting beautiful, functional interfaces that feel natural and drive real engagement.",
-    bg: "bg-violet-600",
+    title: "Green Sanctuary",
+    subtitle: "50 Acres",
+    subtitleSuffix: "of Landscaped Parkland",
+    desc: "Immerse yourself in a curated landscape of walking trails, water features, and native flora — a living, breathing sanctuary on your doorstep.",
+    img: "/menu-bg.jpg",
+    label: "Artist Impression",
   },
   {
-    number: "03",
-    title: "Develop",
-    desc: "Turning designs into fast, accessible, production-ready code built to scale.",
-    bg: "bg-fuchsia-600",
-  },
-  {
-    number: "04",
-    title: "Deliver",
-    desc: "Shipping with confidence — tested, optimised, and ready for the world to use.",
-    bg: "bg-pink-600",
+    title: "Modern Living",
+    subtitle: "World-Class",
+    subtitleSuffix: "Amenities & Facilities",
+    desc: "From clubhouses to sports courts, every detail is designed to elevate everyday life and bring the community together.",
+    img: "/menu-bg.jpg",
+    label: "Artist Impression",
   },
 ];
 
 export default function Home() {
   const heroRef = useRef(null);
-  const stackSectionRef = useRef(null);
-  const cardsRef = useRef([]);
+  const stackWrapRef = useRef(null);
+  const cardEls = useRef([]);
   const formSectionRef = useRef(null);
   const formCardRef = useRef(null);
 
   useEffect(() => {
     gsap.fromTo(
       heroRef.current.querySelectorAll(".hero-item"),
-      { opacity: 0, y: 60 },
-      { opacity: 1, y: 0, duration: 0.9, stagger: 0.2, ease: "power3.out" }
+      { opacity: 0, y: 40 },
+      { opacity: 1, y: 0, duration: 1.1, stagger: 0.18, ease: "power3.out", delay: 0.3 }
     );
 
-    const cards = cardsRef.current;
-    const totalCards = cards.length;
+    const totalCards = CARDS.length;
+    const scrollPerCard = window.innerHeight;
 
-    cards.forEach((card, i) => {
-      ScrollTrigger.create({
-        trigger: card,
-        start: "top top",
-        end: () => `+=${(totalCards - i - 1) * window.innerHeight}`,
-        pin: true,
-        pinSpacing: false,
+    cardEls.current.forEach((el, i) => {
+      if (!el) return;
+      gsap.set(el, {
+        y: i === 0 ? 0 : "100vh",
+        scale: 1,
+        zIndex: i,
       });
-
-      if (i < totalCards - 1) {
-        gsap.to(card, {
-          scale: 0.88,
-          borderRadius: "24px",
-          ease: "none",
-          scrollTrigger: {
-            trigger: cards[i + 1],
-            start: "top top",
-            end: "bottom top",
-            scrub: true,
-          },
-        });
-      }
     });
 
-    // Register form fade-up
+    const tl = gsap.timeline({ paused: true });
+
+    for (let i = 1; i < totalCards; i++) {
+      tl.to(cardEls.current[i], { y: 0, ease: "power2.out" }, (i - 1));
+      tl.to(cardEls.current[i - 1], { scale: 0.94, ease: "power2.out" }, (i - 1));
+    }
+
+    ScrollTrigger.create({
+      trigger: stackWrapRef.current,
+      start: "top top",
+      end: `+=${scrollPerCard * (totalCards - 1)}`,
+      pin: true,
+      pinSpacing: true,
+      scrub: 0.8,
+      animation: tl,
+    });
+
     gsap.fromTo(
       formCardRef.current,
       { opacity: 0, y: 80 },
@@ -96,47 +97,72 @@ export default function Home() {
   return (
     <main>
       {/* Hero */}
-      <section
-        ref={heroRef}
-        className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-indigo-600 to-purple-700 text-white px-6 text-center"
-      >
-        <p className="hero-item text-sm font-semibold tracking-widest uppercase text-indigo-200 mb-4">
-          Welcome
-        </p>
-        <h1 className="hero-item text-5xl md:text-7xl font-bold leading-tight mb-6">
-          Build something <br /> amazing today
-        </h1>
-        <p className="hero-item text-lg md:text-xl text-indigo-100 max-w-xl mb-10">
-          A modern Next.js starter with Tailwind CSS and GSAP scroll animations,
-          ready for your next big idea.
-        </p>
-        <a
-          href="#register"
-          className="hero-item inline-block bg-white text-indigo-700 font-semibold px-8 py-3 rounded-full shadow-lg hover:bg-indigo-50 transition"
-        >
-          Get Started
-        </a>
+      <section className="relative h-screen w-full overflow-hidden">
+        <video autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover">
+          <source src="/hero.mp4" type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-black/45" />
+        <div ref={heroRef} className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6">
+          <img className="w-[25vw]" src="/GP.png" alt="Logo" />
+          <div className="hero-item flex flex-col items-center gap-3">
+            <p className="text-[clamp(2rem,2.5vw,3.5rem)] font-light uppercase text-white/80">
+              Where Life Find Balance
+            </p>
+          </div>
+        </div>
       </section>
 
-      {/* Stacking Cards */}
-      <section ref={stackSectionRef} className="bg-gray-950">
-        {CARDS.map((card, i) => (
-          <div
-            key={i}
-            ref={(el) => (cardsRef.current[i] = el)}
-            className={`${card.bg} min-h-screen flex items-center justify-center px-8`}
-          >
-            <div className="max-w-2xl w-full text-white">
-              <span className="text-8xl font-black opacity-20 leading-none block mb-4">
-                {card.number}
-              </span>
-              <h2 className="text-5xl md:text-6xl font-bold mb-6">{card.title}</h2>
-              <p className="text-xl md:text-2xl text-white/70 leading-relaxed max-w-lg">
-                {card.desc}
-              </p>
+      {/* Stacking Feature Cards (contained, centered) */}
+      <section
+        ref={stackWrapRef}
+        className="bg-[#f0ebe3] flex items-center justify-center min-h-screen px-6 py-16"
+      >
+        <div className="relative w-[70%]" style={{ height: "62vh" }}>
+          {CARDS.map((card, i) => (
+            <div
+              key={i}
+              ref={(el) => (cardEls.current[i] = el)}
+              className="absolute inset-0 flex rounded-tl-[130px] rounded-br-[130px] overflow-hidden shadow-xl"
+              style={{ zIndex: i }}
+            >
+              {/* Left — image */}
+              <div className="relative w-[52%] flex-shrink-0">
+                <img
+                  src={card.img}
+                  alt={card.title}
+                  className="w-full h-full object-cover"
+                  style={{ backgroundColor: "#2d4a2d" }}
+                />
+                {/* Fallback tinted bg if image missing */}
+                <div className="absolute inset-0 bg-[#3a5a3a]/30" />
+                <span className="absolute bottom-4 left-4 text-white/70 text-xs tracking-widest uppercase">
+                  {card.label}
+                </span>
+              </div>
+
+              {/* Right — content */}
+              <div className="flex-1 bg-[#2c4a30] flex flex-col justify-center px-10 py-10 text-white">
+                <h2 className="font-serif text-[clamp(1.6rem,3vw,2.8rem)] font-light uppercase tracking-wide leading-tight mb-3">
+                  {card.title}
+                </h2>
+                <p className="text-sm font-semibold mb-1">
+                  <span className="font-bold">{card.subtitle}</span>
+                  {" "}
+                  <span className="font-light opacity-80">{card.subtitleSuffix}</span>
+                </p>
+
+                {/* Decorative divider */}
+                <div className="flex items-center gap-3 my-5">
+                  <span className="flex-1 h-px bg-white/20" />
+                </div>
+
+                <p className="text-sm md:text-base text-white/70 leading-relaxed">
+                  {card.desc}
+                </p>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </section>
 
       {/* Register */}
@@ -152,41 +178,24 @@ export default function Home() {
           <form className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-              <input
-                type="text"
-                placeholder="John Doe"
-                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
+              <input type="text" placeholder="John Doe" className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-              <input
-                type="email"
-                placeholder="john@example.com"
-                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
+              <input type="email" placeholder="john@example.com" className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-              <input
-                type="password"
-                placeholder="••••••••"
-                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
+              <input type="password" placeholder="••••••••" className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             </div>
-            <button
-              type="submit"
-              className="w-full bg-indigo-600 text-white font-semibold py-2.5 rounded-lg hover:bg-indigo-700 transition"
-            >
+            <button type="submit" className="w-full bg-indigo-600 text-white font-semibold py-2.5 rounded-lg hover:bg-indigo-700 transition">
               Register
             </button>
           </form>
 
           <p className="text-center text-sm text-gray-400 mt-6">
             Already have an account?{" "}
-            <a href="#" className="text-indigo-600 font-medium hover:underline">
-              Sign in
-            </a>
+            <a href="#" className="text-indigo-600 font-medium hover:underline">Sign in</a>
           </p>
         </div>
       </section>
