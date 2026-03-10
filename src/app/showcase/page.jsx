@@ -1,8 +1,12 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import client from "../../lib/apolloClient";
+import { gql } from "@apollo/client";
+
+gsap.registerPlugin(ScrollTrigger);
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -35,13 +39,14 @@ const CARDS = [
 
 export default function Showcase() {
   const heroRef = useRef(null);
-
   // Zoom section refs
   const zoomWrapRef = useRef(null);
   const zoomBoxRef = useRef(null);
-
   // Stacking cards
   const cardsRef = useRef([]);
+
+  // WordPress posts state
+  const [posts, setPosts] = useState([]);
 
   useEffect(() => {
     // ── Hero entrance ──────────────────────────────────────────
@@ -52,8 +57,6 @@ export default function Showcase() {
     );
 
     // ── Container zoom to full screen ──────────────────────────
-    // The inner box starts as a rounded, padded container and
-    // scales / expands to fill the full viewport as you scroll.
     gsap.timeline({
       scrollTrigger: {
         trigger: zoomWrapRef.current,
@@ -75,10 +78,9 @@ export default function Showcase() {
         "-=0.3"
       );
 
-    // ── Stacking cards ─────────────────────────────────────────
+    // ── Stacking cards ──
     const cards = cardsRef.current;
     const totalCards = cards.length;
-
     cards.forEach((card, i) => {
       ScrollTrigger.create({
         trigger: card,
@@ -87,7 +89,6 @@ export default function Showcase() {
         pin: true,
         pinSpacing: false,
       });
-
       if (i < totalCards - 1) {
         gsap.to(card, {
           scale: 0.88,
@@ -102,6 +103,24 @@ export default function Showcase() {
         });
       }
     });
+
+    // Fetch posts from WordPress
+    client
+      .query({
+        query: gql`
+          query {
+            posts {
+              nodes {
+                id
+                title
+                excerpt
+              }
+            }
+          }
+        `,
+      })
+      .then((result) => setPosts(result.data.posts.nodes))
+      .catch(() => setPosts([]));
 
     return () => ScrollTrigger.getAll().forEach((t) => t.kill());
   }, []);
@@ -187,6 +206,25 @@ export default function Showcase() {
             </div>
           </div>
         ))}
+      </section>
+
+      {/* ── WordPress Posts Example ── */}
+      <section className="bg-gray-950 py-12">
+        <h2 className="text-3xl text-white font-bold mb-6 text-center">WordPress Posts</h2>
+        <div className="max-w-2xl mx-auto space-y-8">
+          {posts.length === 0 && (
+            <p className="text-white/70 text-center">No posts found or unable to fetch data.</p>
+          )}
+          {posts.map((post) => (
+            <div key={post.id} className="bg-white/10 p-6 rounded-lg">
+              <h3 className="text-2xl font-semibold text-white mb-2">{post.title}</h3>
+              <div
+                className="text-white/80"
+                dangerouslySetInnerHTML={{ __html: post.excerpt }}
+              />
+            </div>
+          ))}
+        </div>
       </section>
     </main>
   );
