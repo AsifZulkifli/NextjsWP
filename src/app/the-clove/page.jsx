@@ -282,7 +282,6 @@
 // }
 
 
-
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -303,6 +302,13 @@ const GET_CLOVE_DATA = gql`
             mimeType
           }
         }
+        sectionLogo {
+          node {
+            sourceUrl
+          }
+        }
+        sectionHeading
+        sectionDescription
       }
     }
 
@@ -335,6 +341,13 @@ export default function TheClove() {
   const [heroTitle, setHeroTitle] = useState("The Clove");
   const [heroVideo, setHeroVideo] = useState(null);
   const [heroVideoType, setHeroVideoType] = useState("video/mp4");
+
+  const [sectionLogo, setSectionLogo] = useState("/clove-logo.png");
+  const [sectionHeading, setSectionHeading] = useState("Discover a new way of living.");
+  const [sectionDescription, setSectionDescription] = useState(
+    "This innovative solution is tailored to suit modern lifestyles which have evolved over the years. Compared to a traditional terrace row, The Clove's revolutionary design features only 8 units per cluster."
+  );
+
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -349,17 +362,21 @@ export default function TheClove() {
 
         const fetchedCards = result?.data?.properties?.nodes || [];
         const pageData = result?.data?.page || null;
+        const pageFields = pageData?.clovePageFields || null;
 
         setCards(fetchedCards);
-        setHeroTitle(
-          pageData?.clovePageFields?.hero_title || pageData?.title || "The Clove"
+
+        setHeroTitle(pageFields?.hero_title || pageData?.title || "The Clove");
+        setHeroVideo(pageFields?.herovideo?.node?.mediaItemUrl || null);
+        setHeroVideoType(pageFields?.herovideo?.node?.mimeType || "video/mp4");
+
+        setSectionLogo(pageFields?.sectionLogo?.node?.sourceUrl || "/clove-logo.png");
+        setSectionHeading(pageFields?.sectionHeading || "Discover a new way of living.");
+        setSectionDescription(
+          pageFields?.sectionDescription ||
+            "This innovative solution is tailored to suit modern lifestyles which have evolved over the years. Compared to a traditional terrace row, The Clove's revolutionary design features only 8 units per cluster."
         );
-        setHeroVideo(
-          pageData?.clovePageFields?.herovideo?.node?.mediaItemUrl || null
-        );
-        setHeroVideoType(
-          pageData?.clovePageFields?.herovideo?.node?.mimeType || "video/mp4"
-        );
+
         setErrorMsg("");
       })
       .catch((error) => {
@@ -368,6 +385,11 @@ export default function TheClove() {
         setHeroTitle("The Clove");
         setHeroVideo(null);
         setHeroVideoType("video/mp4");
+        setSectionLogo("/clove-logo.png");
+        setSectionHeading("Discover a new way of living.");
+        setSectionDescription(
+          "This innovative solution is tailored to suit modern lifestyles which have evolved over the years. Compared to a traditional terrace row, The Clove's revolutionary design features only 8 units per cluster."
+        );
         setErrorMsg(error.message || "Failed to fetch GraphQL data");
       })
       .finally(() => {
@@ -399,6 +421,7 @@ export default function TheClove() {
         <div>Cards count: {cards.length}</div>
         <div>Hero title: {heroTitle || "none"}</div>
         <div>Hero video: {heroVideo || "none"}</div>
+        <div>Section logo: {sectionLogo || "none"}</div>
         <div>Error: {errorMsg || "none"}</div>
       </div>
 
@@ -427,9 +450,7 @@ export default function TheClove() {
           className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6 gap-8"
         >
           <div className="hero-item">
-            <h1 className="uppercase text-white text-[100px]">
-              {heroTitle}
-            </h1>
+            <h1 className="uppercase text-white text-[100px]">{heroTitle}</h1>
           </div>
 
           <div className="hero-item">
@@ -445,20 +466,17 @@ export default function TheClove() {
 
       <section className="bg-white px-6 py-20 flex flex-col items-center text-center">
         <img
-          src="/clove-logo.png"
+          src={sectionLogo || "/clove-logo.png"}
           alt="The Clove Logo"
           className="w-[160px] mb-12"
         />
 
         <h2 className="font-serif text-[clamp(2rem,4vw,3.5rem)] font-light text-[#1a3a2a] leading-tight mb-6 max-w-3xl">
-          Discover a new way of{" "}
-          <span className="text-[#42B58B] italic">living.</span>
+          {sectionHeading}
         </h2>
 
         <p className="text-gray-500 text-[clamp(0.9rem,1.2vw,1.05rem)] leading-relaxed max-w-xl mb-16">
-          This innovative solution is tailored to suit modern lifestyles which have
-          evolved over the years. Compared to a traditional terrace row, The Clove&apos;s
-          revolutionary design features only 8 units per cluster.
+          {sectionDescription}
         </p>
       </section>
 
