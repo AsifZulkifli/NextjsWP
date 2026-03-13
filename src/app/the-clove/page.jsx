@@ -338,15 +338,12 @@ export default function TheClove() {
   const heroRef = useRef(null);
 
   const [cards, setCards] = useState([]);
-  const [heroTitle, setHeroTitle] = useState("The Clove");
+  const [heroTitle, setHeroTitle] = useState(null);
   const [heroVideo, setHeroVideo] = useState(null);
-  const [heroVideoType, setHeroVideoType] = useState("video/mp4");
-
-  const [sectionLogo, setSectionLogo] = useState("/clove-logo.png");
-  const [sectionHeading, setSectionHeading] = useState("Discover a new way of living.");
-  const [sectionDescription, setSectionDescription] = useState(
-    "This innovative solution is tailored to suit modern lifestyles which have evolved over the years. Compared to a traditional terrace row, The Clove's revolutionary design features only 8 units per cluster."
-  );
+  const [heroVideoType, setHeroVideoType] = useState(null);
+  const [sectionLogo, setSectionLogo] = useState(null);
+  const [sectionHeading, setSectionHeading] = useState(null);
+  const [sectionDescription, setSectionDescription] = useState(null);
 
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
@@ -358,38 +355,21 @@ export default function TheClove() {
         fetchPolicy: "no-cache",
       })
       .then((result) => {
-        console.log("GRAPHQL RESULT:", result);
-
         const fetchedCards = result?.data?.properties?.nodes || [];
         const pageData = result?.data?.page || null;
         const pageFields = pageData?.clovePageFields || null;
 
         setCards(fetchedCards);
-
-        setHeroTitle(pageFields?.hero_title || pageData?.title || "The Clove");
-        setHeroVideo(pageFields?.herovideo?.node?.mediaItemUrl || null);
+        setHeroTitle(pageFields?.hero_title || pageData?.title || "");
+        setHeroVideo(pageFields?.herovideo?.node?.mediaItemUrl || "");
         setHeroVideoType(pageFields?.herovideo?.node?.mimeType || "video/mp4");
-
-        setSectionLogo(pageFields?.sectionLogo?.node?.sourceUrl || "/clove-logo.png");
-        setSectionHeading(pageFields?.sectionHeading || "Discover a new way of living.");
-        setSectionDescription(
-          pageFields?.sectionDescription ||
-            "This innovative solution is tailored to suit modern lifestyles which have evolved over the years. Compared to a traditional terrace row, The Clove's revolutionary design features only 8 units per cluster."
-        );
-
+        setSectionLogo(pageFields?.sectionLogo?.node?.sourceUrl || "");
+        setSectionHeading(pageFields?.sectionHeading || "");
+        setSectionDescription(pageFields?.sectionDescription || "");
         setErrorMsg("");
       })
       .catch((error) => {
         console.error("GraphQL fetch error:", error);
-        setCards([]);
-        setHeroTitle("The Clove");
-        setHeroVideo(null);
-        setHeroVideoType("video/mp4");
-        setSectionLogo("/clove-logo.png");
-        setSectionHeading("Discover a new way of living.");
-        setSectionDescription(
-          "This innovative solution is tailored to suit modern lifestyles which have evolved over the years. Compared to a traditional terrace row, The Clove's revolutionary design features only 8 units per cluster."
-        );
         setErrorMsg(error.message || "Failed to fetch GraphQL data");
       })
       .finally(() => {
@@ -398,7 +378,7 @@ export default function TheClove() {
   }, []);
 
   useEffect(() => {
-    if (!heroRef.current) return;
+    if (!heroRef.current || loading) return;
 
     gsap.fromTo(
       heroRef.current.querySelectorAll(".hero-item"),
@@ -412,19 +392,28 @@ export default function TheClove() {
         delay: 0.3,
       }
     );
-  }, []);
+  }, [loading]);
+
+  if (loading) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-white">
+        <p className="text-gray-500 text-sm uppercase tracking-[0.2em]">
+          Loading...
+        </p>
+      </main>
+    );
+  }
+
+  if (errorMsg) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-white px-6">
+        <p className="text-red-500 text-sm text-center">{errorMsg}</p>
+      </main>
+    );
+  }
 
   return (
     <main>
-      <div className="fixed top-2 left-2 z-[9999] bg-white text-black text-xs p-3 rounded shadow max-w-md">
-        <div>Loading: {loading ? "yes" : "no"}</div>
-        <div>Cards count: {cards.length}</div>
-        <div>Hero title: {heroTitle || "none"}</div>
-        <div>Hero video: {heroVideo || "none"}</div>
-        <div>Section logo: {sectionLogo || "none"}</div>
-        <div>Error: {errorMsg || "none"}</div>
-      </div>
-
       <section className="relative h-screen w-full overflow-hidden">
         {heroVideo ? (
           <video
@@ -434,13 +423,10 @@ export default function TheClove() {
             playsInline
             className="absolute inset-0 w-full h-full object-cover"
           >
-            <source src={heroVideo} type={heroVideoType} />
+            <source src={heroVideo} type={heroVideoType || "video/mp4"} />
           </video>
         ) : (
-          <div
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: "url('/menu-bg.jpg')" }}
-          />
+          <div className="absolute inset-0 bg-black" />
         )}
 
         <div className="absolute inset-0 bg-black/50" />
@@ -450,7 +436,9 @@ export default function TheClove() {
           className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6 gap-8"
         >
           <div className="hero-item">
-            <h1 className="uppercase text-white text-[100px]">{heroTitle}</h1>
+            <h1 className="uppercase text-white text-[100px]">
+              {heroTitle}
+            </h1>
           </div>
 
           <div className="hero-item">
@@ -465,28 +453,30 @@ export default function TheClove() {
       </section>
 
       <section className="bg-white px-6 py-20 flex flex-col items-center text-center">
-        <img
-          src={sectionLogo || "/clove-logo.png"}
-          alt="The Clove Logo"
-          className="w-[160px] mb-12"
-        />
+        {sectionLogo && (
+          <img
+            src={sectionLogo}
+            alt="The Clove Logo"
+            className="w-[160px] mb-12"
+          />
+        )}
 
-        <h2 className="font-serif text-[clamp(2rem,4vw,3.5rem)] font-light text-[#1a3a2a] leading-tight mb-6 max-w-3xl">
-          {sectionHeading}
-        </h2>
+        {sectionHeading && (
+          <h2 className="font-serif text-[clamp(2rem,4vw,3.5rem)] font-light text-[#1a3a2a] leading-tight mb-6 max-w-3xl">
+            {sectionHeading}
+          </h2>
+        )}
 
-        <p className="text-gray-500 text-[clamp(0.9rem,1.2vw,1.05rem)] leading-relaxed max-w-xl mb-16">
-          {sectionDescription}
-        </p>
+        {sectionDescription && (
+          <p className="text-gray-500 text-[clamp(0.9rem,1.2vw,1.05rem)] leading-relaxed max-w-xl mb-16">
+            {sectionDescription}
+          </p>
+        )}
       </section>
 
       <section className="bg-[#f0ebe3] px-8 py-20">
         <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {loading ? (
-            <div className="col-span-full text-center text-gray-600">
-              Loading cards...
-            </div>
-          ) : cards.length === 0 ? (
+          {cards.length === 0 ? (
             <div className="col-span-full text-center text-gray-600">
               No property cards found.
             </div>
