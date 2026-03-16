@@ -281,7 +281,6 @@
 //   );
 // }
 
-
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -312,7 +311,7 @@ const GET_CLOVE_DATA = gql`
       }
     }
 
-    properties(first: 20, where: { orderby: { field: MENU_ORDER, order: ASC } }) {
+    theCloves(first: 20, where: { orderby: { field: MENU_ORDER, order: ASC } }) {
       nodes {
         id
         title
@@ -355,7 +354,7 @@ export default function TheClove() {
         fetchPolicy: "no-cache",
       })
       .then((result) => {
-        const fetchedCards = result?.data?.properties?.nodes || [];
+        const fetchedCards = result?.data?.theCloves?.nodes || [];
         const pageData = result?.data?.page || null;
         const pageFields = pageData?.clovePageFields || null;
 
@@ -393,6 +392,30 @@ export default function TheClove() {
       }
     );
   }, [loading]);
+
+  const renderStyledHeading = (text) => {
+    if (!text) return null;
+
+    const trimmed = text.trim();
+    if (!trimmed) return null;
+
+    const hasDot = trimmed.endsWith(".");
+    const textWithoutDot = hasDot ? trimmed.slice(0, -1) : trimmed;
+
+    const words = textWithoutDot.split(" ").filter(Boolean);
+    if (words.length === 0) return null;
+
+    const lastWord = words.pop();
+    const firstPart = words.join(" ");
+
+    return (
+      <>
+        {firstPart && `${firstPart} `}
+        <span className="text-[#42B58B] italic">{lastWord}</span>
+        {hasDot && <span className="text-[#c9a15d]">.</span>}
+      </>
+    );
+  };
 
   if (loading) {
     return (
@@ -437,7 +460,7 @@ export default function TheClove() {
         >
           <div className="hero-item">
             <h1 className="uppercase text-white text-[100px]">
-              {heroTitle}
+              {heroTitle || ""}
             </h1>
           </div>
 
@@ -463,7 +486,7 @@ export default function TheClove() {
 
         {sectionHeading && (
           <h2 className="font-serif text-[clamp(2rem,4vw,3.5rem)] font-light text-[#1a3a2a] leading-tight mb-6 max-w-3xl">
-            {sectionHeading}
+            {renderStyledHeading(sectionHeading)}
           </h2>
         )}
 
@@ -481,68 +504,85 @@ export default function TheClove() {
               No property cards found.
             </div>
           ) : (
-            cards.map((card) => (
-              <div
-                key={card.id}
-                className="bg-white rounded-t-2xl overflow-hidden shadow-lg flex flex-col"
-              >
-                <div className="relative">
-                  <img
-                    src={card.propertyFields?.image?.node?.sourceUrl || "/menu-bg.jpg"}
-                    alt={card.title}
-                    className="w-full h-[220px] object-cover"
-                  />
-                </div>
+            cards.map((card) => {
+              const imageUrl = card.propertyFields?.image?.node?.sourceUrl || "";
+              const subtitle = card.propertyFields?.subtitle || "";
+              const description =
+                card.propertyFields?.description ||
+                card.content?.replace(/<[^>]+>/g, "") ||
+                "";
+              const price = card.propertyFields?.price || "";
+              const monthlyprice = card.propertyFields?.monthlyprice || "";
 
-                <div className="px-4 py-6 flex flex-col flex-1 gap-3">
-                  <div>
-                    <h3 className="font-serif text-[1.5rem] text-[#1a3a2a] mb-1">
-                      {card.title}
-                    </h3>
-                    <p className="text-gray-500 text-sm">
-                      {card.propertyFields?.subtitle || "-"}
-                    </p>
-                  </div>
+              return (
+                <div
+                  key={card.id}
+                  className="bg-white rounded-t-2xl overflow-hidden shadow-lg flex flex-col"
+                >
+                  {imageUrl ? (
+                    <div className="relative">
+                      <img
+                        src={imageUrl}
+                        alt={card.title || ""}
+                        className="w-full h-[220px] object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-full h-[220px] bg-transparent" />
+                  )}
 
-                  <hr className="border-gray-200" />
-
-                  <p className="text-gray-500 text-sm leading-relaxed flex-1">
-                    {card.propertyFields?.description ||
-                      card.content?.replace(/<[^>]+>/g, "") ||
-                      "-"}
-                  </p>
-
-                  <div className="grid grid-cols-2 gap-3 mt-2">
-                    <div className="bg-[#e8f5ef] rounded-lg px-4 py-3">
-                      <p className="text-gray-400 text-[11px] mb-0.5">From</p>
-                      <p className="text-[#1a3a2a] font-bold text-[20px]">
-                        {card.propertyFields?.price || "-"}
-                      </p>
+                  <div className="px-4 py-6 flex flex-col flex-1 gap-3">
+                    <div>
+                      <h3 className="font-serif text-[1.5rem] text-[#1a3a2a] mb-1">
+                        {card.title || ""}
+                      </h3>
+                      {subtitle && (
+                        <p className="text-gray-500 text-sm">{subtitle}</p>
+                      )}
                     </div>
 
-                    <div className="bg-[#e8f5ef] rounded-lg px-4 py-3">
-                      <p className="text-gray-400 text-[11px] mb-0.5">From</p>
-                      <p className="text-[#1a3a2a] font-bold text-[20px]">
-                        {card.propertyFields?.monthlyprice || "-"}{" "}
-                        <span className="font-light text-xs">/month</span>
+                    <hr className="border-gray-200" />
+
+                    {description && (
+                      <p className="text-gray-500 text-sm leading-relaxed flex-1">
+                        {description}
                       </p>
+                    )}
+
+                    <div className="grid grid-cols-2 gap-3 mt-2">
+                      <div className="bg-[#e8f5ef] rounded-lg px-4 py-3">
+                        <p className="text-gray-400 text-[11px] mb-0.5">From</p>
+                        <p className="text-[#1a3a2a] font-bold text-[20px]">
+                          {price}
+                        </p>
+                      </div>
+
+                      <div className="bg-[#e8f5ef] rounded-lg px-4 py-3">
+                        <p className="text-gray-400 text-[11px] mb-0.5">From</p>
+                        <p className="text-[#1a3a2a] font-bold text-[20px]">
+                          {monthlyprice}
+                          {monthlyprice && (
+                            <span className="font-light text-xs"> /month</span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 mt-2">
+                      <button className="rounded-full border border-gray-300 text-gray-700 text-xs uppercase tracking-widest py-2.5 hover:border-[#42B58B] hover:text-[#42B58B] transition">
+                        Features
+                      </button>
+                      <a
+                        href={card.slug ? `/property/${card.slug}` : "#"}
+                        className="rounded-full bg-[#42B58B] text-white text-xs uppercase tracking-widest py-2.5 hover:bg-[#3d9a78] transition text-center"
+                      >
+                        Learn More
+                      </a>
                     </div>
                   </div>
-
-                  <div className="grid grid-cols-2 gap-3 mt-2">
-                    <button className="rounded-full border border-gray-300 text-gray-700 text-xs uppercase tracking-widest py-2.5 hover:border-[#42B58B] hover:text-[#42B58B] transition">
-                      Features
-                    </button>
-                    <a
-                      href={`/property/${card.slug}`}
-                      className="rounded-full bg-[#42B58B] text-white text-xs uppercase tracking-widest py-2.5 hover:bg-[#3d9a78] transition text-center"
-                    >
-                      Learn More
-                    </a>
-                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </section>
@@ -552,8 +592,12 @@ export default function TheClove() {
         className="min-h-screen flex items-center justify-center bg-[#f0ebe3] px-6 py-24"
       >
         <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-10">
-          <h2 className="text-3xl font-bold text-gray-800 mb-2">Register Interest</h2>
-          <p className="text-gray-500 mb-8">Be the first to know about The Clove.</p>
+          <h2 className="text-3xl font-bold text-gray-800 mb-2">
+            Register Interest
+          </h2>
+          <p className="text-gray-500 mb-8">
+            Be the first to know about The Clove.
+          </p>
 
           <form className="space-y-5">
             <div>
