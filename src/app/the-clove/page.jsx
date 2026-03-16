@@ -281,7 +281,6 @@
 //   );
 // }
 
-
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -312,7 +311,7 @@ const GET_CLOVE_DATA = gql`
       }
     }
 
-    properties(first: 20, where: { orderby: { field: MENU_ORDER, order: ASC } }) {
+    theCloves(first: 20, where: { orderby: { field: MENU_ORDER, order: ASC } }) {
       nodes {
         id
         title
@@ -338,15 +337,12 @@ export default function TheClove() {
   const heroRef = useRef(null);
 
   const [cards, setCards] = useState([]);
-  const [heroTitle, setHeroTitle] = useState("The Clove");
+  const [heroTitle, setHeroTitle] = useState(null);
   const [heroVideo, setHeroVideo] = useState(null);
-  const [heroVideoType, setHeroVideoType] = useState("video/mp4");
-
-  const [sectionLogo, setSectionLogo] = useState("/clove-logo.png");
-  const [sectionHeading, setSectionHeading] = useState("Discover a new way of living.");
-  const [sectionDescription, setSectionDescription] = useState(
-    "This innovative solution is tailored to suit modern lifestyles which have evolved over the years. Compared to a traditional terrace row, The Clove's revolutionary design features only 8 units per cluster."
-  );
+  const [heroVideoType, setHeroVideoType] = useState(null);
+  const [sectionLogo, setSectionLogo] = useState(null);
+  const [sectionHeading, setSectionHeading] = useState(null);
+  const [sectionDescription, setSectionDescription] = useState(null);
 
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
@@ -358,38 +354,21 @@ export default function TheClove() {
         fetchPolicy: "no-cache",
       })
       .then((result) => {
-        console.log("GRAPHQL RESULT:", result);
-
-        const fetchedCards = result?.data?.properties?.nodes || [];
+        const fetchedCards = result?.data?.theCloves?.nodes || [];
         const pageData = result?.data?.page || null;
         const pageFields = pageData?.clovePageFields || null;
 
         setCards(fetchedCards);
-
-        setHeroTitle(pageFields?.hero_title || pageData?.title || "The Clove");
-        setHeroVideo(pageFields?.herovideo?.node?.mediaItemUrl || null);
+        setHeroTitle(pageFields?.hero_title || pageData?.title || "");
+        setHeroVideo(pageFields?.herovideo?.node?.mediaItemUrl || "");
         setHeroVideoType(pageFields?.herovideo?.node?.mimeType || "video/mp4");
-
-        setSectionLogo(pageFields?.sectionLogo?.node?.sourceUrl || "/clove-logo.png");
-        setSectionHeading(pageFields?.sectionHeading || "Discover a new way of living.");
-        setSectionDescription(
-          pageFields?.sectionDescription ||
-            "This innovative solution is tailored to suit modern lifestyles which have evolved over the years. Compared to a traditional terrace row, The Clove's revolutionary design features only 8 units per cluster."
-        );
-
+        setSectionLogo(pageFields?.sectionLogo?.node?.sourceUrl || "");
+        setSectionHeading(pageFields?.sectionHeading || "");
+        setSectionDescription(pageFields?.sectionDescription || "");
         setErrorMsg("");
       })
       .catch((error) => {
         console.error("GraphQL fetch error:", error);
-        setCards([]);
-        setHeroTitle("The Clove");
-        setHeroVideo(null);
-        setHeroVideoType("video/mp4");
-        setSectionLogo("/clove-logo.png");
-        setSectionHeading("Discover a new way of living.");
-        setSectionDescription(
-          "This innovative solution is tailored to suit modern lifestyles which have evolved over the years. Compared to a traditional terrace row, The Clove's revolutionary design features only 8 units per cluster."
-        );
         setErrorMsg(error.message || "Failed to fetch GraphQL data");
       })
       .finally(() => {
@@ -398,7 +377,7 @@ export default function TheClove() {
   }, []);
 
   useEffect(() => {
-    if (!heroRef.current) return;
+    if (!heroRef.current || loading) return;
 
     gsap.fromTo(
       heroRef.current.querySelectorAll(".hero-item"),
@@ -412,19 +391,52 @@ export default function TheClove() {
         delay: 0.3,
       }
     );
-  }, []);
+  }, [loading]);
+
+  const renderStyledHeading = (text) => {
+    if (!text) return null;
+
+    const trimmed = text.trim();
+    if (!trimmed) return null;
+
+    const hasDot = trimmed.endsWith(".");
+    const textWithoutDot = hasDot ? trimmed.slice(0, -1) : trimmed;
+
+    const words = textWithoutDot.split(" ").filter(Boolean);
+    if (words.length === 0) return null;
+
+    const lastWord = words.pop();
+    const firstPart = words.join(" ");
+
+    return (
+      <>
+        {firstPart && `${firstPart} `}
+        <span className="text-[#42B58B] italic">{lastWord}</span>
+        {hasDot && <span className="text-[#c9a15d]">.</span>}
+      </>
+    );
+  };
+
+  if (loading) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-white">
+        <p className="text-gray-500 text-sm uppercase tracking-[0.2em]">
+          Loading...
+        </p>
+      </main>
+    );
+  }
+
+  if (errorMsg) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-white px-6">
+        <p className="text-red-500 text-sm text-center">{errorMsg}</p>
+      </main>
+    );
+  }
 
   return (
     <main>
-      <div className="fixed top-2 left-2 z-[9999] bg-white text-black text-xs p-3 rounded shadow max-w-md">
-        <div>Loading: {loading ? "yes" : "no"}</div>
-        <div>Cards count: {cards.length}</div>
-        <div>Hero title: {heroTitle || "none"}</div>
-        <div>Hero video: {heroVideo || "none"}</div>
-        <div>Section logo: {sectionLogo || "none"}</div>
-        <div>Error: {errorMsg || "none"}</div>
-      </div>
-
       <section className="relative h-screen w-full overflow-hidden">
         {heroVideo ? (
           <video
@@ -434,13 +446,10 @@ export default function TheClove() {
             playsInline
             className="absolute inset-0 w-full h-full object-cover"
           >
-            <source src={heroVideo} type={heroVideoType} />
+            <source src={heroVideo} type={heroVideoType || "video/mp4"} />
           </video>
         ) : (
-          <div
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: "url('/menu-bg.jpg')" }}
-          />
+          <div className="absolute inset-0 bg-black" />
         )}
 
         <div className="absolute inset-0 bg-black/50" />
@@ -450,7 +459,9 @@ export default function TheClove() {
           className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6 gap-8"
         >
           <div className="hero-item">
-            <h1 className="uppercase text-white text-[100px]">{heroTitle}</h1>
+            <h1 className="uppercase text-white text-[100px]">
+              {heroTitle || ""}
+            </h1>
           </div>
 
           <div className="hero-item">
@@ -465,94 +476,113 @@ export default function TheClove() {
       </section>
 
       <section className="bg-white px-6 py-20 flex flex-col items-center text-center">
-        <img
-          src={sectionLogo || "/clove-logo.png"}
-          alt="The Clove Logo"
-          className="w-[160px] mb-12"
-        />
+        {sectionLogo && (
+          <img
+            src={sectionLogo}
+            alt="The Clove Logo"
+            className="w-[160px] mb-12"
+          />
+        )}
 
-        <h2 className="font-serif text-[clamp(2rem,4vw,3.5rem)] font-light text-[#1a3a2a] leading-tight mb-6 max-w-3xl">
-          {sectionHeading}
-        </h2>
+        {sectionHeading && (
+          <h2 className="font-serif text-[clamp(2rem,4vw,3.5rem)] font-light text-[#1a3a2a] leading-tight mb-6 max-w-3xl">
+            {renderStyledHeading(sectionHeading)}
+          </h2>
+        )}
 
-        <p className="text-gray-500 text-[clamp(0.9rem,1.2vw,1.05rem)] leading-relaxed max-w-xl mb-16">
-          {sectionDescription}
-        </p>
+        {sectionDescription && (
+          <p className="text-gray-500 text-[clamp(0.9rem,1.2vw,1.05rem)] leading-relaxed max-w-xl mb-16">
+            {sectionDescription}
+          </p>
+        )}
       </section>
 
       <section className="bg-[#f0ebe3] px-8 py-20">
         <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {loading ? (
-            <div className="col-span-full text-center text-gray-600">
-              Loading cards...
-            </div>
-          ) : cards.length === 0 ? (
+          {cards.length === 0 ? (
             <div className="col-span-full text-center text-gray-600">
               No property cards found.
             </div>
           ) : (
-            cards.map((card) => (
-              <div
-                key={card.id}
-                className="bg-white rounded-t-2xl overflow-hidden shadow-lg flex flex-col"
-              >
-                <div className="relative">
-                  <img
-                    src={card.propertyFields?.image?.node?.sourceUrl || "/menu-bg.jpg"}
-                    alt={card.title}
-                    className="w-full h-[220px] object-cover"
-                  />
-                </div>
+            cards.map((card) => {
+              const imageUrl = card.propertyFields?.image?.node?.sourceUrl || "";
+              const subtitle = card.propertyFields?.subtitle || "";
+              const description =
+                card.propertyFields?.description ||
+                card.content?.replace(/<[^>]+>/g, "") ||
+                "";
+              const price = card.propertyFields?.price || "";
+              const monthlyprice = card.propertyFields?.monthlyprice || "";
 
-                <div className="px-4 py-6 flex flex-col flex-1 gap-3">
-                  <div>
-                    <h3 className="font-serif text-[1.5rem] text-[#1a3a2a] mb-1">
-                      {card.title}
-                    </h3>
-                    <p className="text-gray-500 text-sm">
-                      {card.propertyFields?.subtitle || "-"}
-                    </p>
-                  </div>
+              return (
+                <div
+                  key={card.id}
+                  className="bg-white rounded-t-2xl overflow-hidden shadow-lg flex flex-col"
+                >
+                  {imageUrl ? (
+                    <div className="relative">
+                      <img
+                        src={imageUrl}
+                        alt={card.title || ""}
+                        className="w-full h-[220px] object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-full h-[220px] bg-transparent" />
+                  )}
 
-                  <hr className="border-gray-200" />
-
-                  <p className="text-gray-500 text-sm leading-relaxed flex-1">
-                    {card.propertyFields?.description ||
-                      card.content?.replace(/<[^>]+>/g, "") ||
-                      "-"}
-                  </p>
-
-                  <div className="grid grid-cols-2 gap-3 mt-2">
-                    <div className="bg-[#e8f5ef] rounded-lg px-4 py-3">
-                      <p className="text-gray-400 text-[11px] mb-0.5">From</p>
-                      <p className="text-[#1a3a2a] font-bold text-[20px]">
-                        {card.propertyFields?.price || "-"}
-                      </p>
+                  <div className="px-4 py-6 flex flex-col flex-1 gap-3">
+                    <div>
+                      <h3 className="font-serif text-[1.5rem] text-[#1a3a2a] mb-1">
+                        {card.title || ""}
+                      </h3>
+                      {subtitle && (
+                        <p className="text-gray-500 text-sm">{subtitle}</p>
+                      )}
                     </div>
 
-                    <div className="bg-[#e8f5ef] rounded-lg px-4 py-3">
-                      <p className="text-gray-400 text-[11px] mb-0.5">From</p>
-                      <p className="text-[#1a3a2a] font-bold text-[20px]">
-                        {card.propertyFields?.monthlyprice || "-"}{" "}
-                        <span className="font-light text-xs">/month</span>
+                    <hr className="border-gray-200" />
+
+                    {description && (
+                      <p className="text-gray-500 text-sm leading-relaxed flex-1">
+                        {description}
                       </p>
+                    )}
+
+                    <div className="grid grid-cols-2 gap-3 mt-2">
+                      <div className="bg-[#e8f5ef] rounded-lg px-4 py-3">
+                        <p className="text-gray-400 text-[11px] mb-0.5">From</p>
+                        <p className="text-[#1a3a2a] font-bold text-[20px]">
+                          {price}
+                        </p>
+                      </div>
+
+                      <div className="bg-[#e8f5ef] rounded-lg px-4 py-3">
+                        <p className="text-gray-400 text-[11px] mb-0.5">From</p>
+                        <p className="text-[#1a3a2a] font-bold text-[20px]">
+                          {monthlyprice}
+                          {monthlyprice && (
+                            <span className="font-light text-xs"> /month</span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 mt-2">
+                      <button className="rounded-full border border-gray-300 text-gray-700 text-xs uppercase tracking-widest py-2.5 hover:border-[#42B58B] hover:text-[#42B58B] transition">
+                        Features
+                      </button>
+                      <a
+                        href={card.slug ? `/property/${card.slug}` : "#"}
+                        className="rounded-full bg-[#42B58B] text-white text-xs uppercase tracking-widest py-2.5 hover:bg-[#3d9a78] transition text-center"
+                      >
+                        Learn More
+                      </a>
                     </div>
                   </div>
-
-                  <div className="grid grid-cols-2 gap-3 mt-2">
-                    <button className="rounded-full border border-gray-300 text-gray-700 text-xs uppercase tracking-widest py-2.5 hover:border-[#42B58B] hover:text-[#42B58B] transition">
-                      Features
-                    </button>
-                    <a
-                      href={`/property/${card.slug}`}
-                      className="rounded-full bg-[#42B58B] text-white text-xs uppercase tracking-widest py-2.5 hover:bg-[#3d9a78] transition text-center"
-                    >
-                      Learn More
-                    </a>
-                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </section>
@@ -562,8 +592,12 @@ export default function TheClove() {
         className="min-h-screen flex items-center justify-center bg-[#f0ebe3] px-6 py-24"
       >
         <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-10">
-          <h2 className="text-3xl font-bold text-gray-800 mb-2">Register Interest</h2>
-          <p className="text-gray-500 mb-8">Be the first to know about The Clove.</p>
+          <h2 className="text-3xl font-bold text-gray-800 mb-2">
+            Register Interest
+          </h2>
+          <p className="text-gray-500 mb-8">
+            Be the first to know about The Clove.
+          </p>
 
           <form className="space-y-5">
             <div>
