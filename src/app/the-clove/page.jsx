@@ -412,7 +412,7 @@ export default function TheClove() {
       <>
         {firstPart && `${firstPart} `}
         <span className="text-[#42B58B] italic">{lastWord}</span>
-        {hasDot && <span className="text-[#c9a15d]">.</span>}
+        {hasDot && <span className="text-[#42B58B]">.</span>}
       </>
     );
   };
