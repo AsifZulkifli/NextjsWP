@@ -283,7 +283,7 @@
 
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { gsap } from "gsap";
 import client from "../../lib/apolloClient";
 import { gql } from "@apollo/client";
@@ -295,6 +295,7 @@ const GET_CLOVE_DATA = gql`
       title
       clovePageFields {
         hero_title
+        merqueeItems
         herovideo {
           node {
             mediaItemUrl
@@ -343,6 +344,7 @@ export default function TheClove() {
   const [sectionLogo, setSectionLogo] = useState(null);
   const [sectionHeading, setSectionHeading] = useState(null);
   const [sectionDescription, setSectionDescription] = useState(null);
+  const [marqueeItems, setMarqueeItems] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
@@ -358,6 +360,13 @@ export default function TheClove() {
         const pageData = result?.data?.page || null;
         const pageFields = pageData?.clovePageFields || null;
 
+        const rawMerquee = pageFields?.merqueeItems || "";
+
+        const fetchedMarqueeItems = rawMerquee
+          .split(/\r?\n|,/)
+          .map((item) => item.trim())
+          .filter(Boolean);
+
         setCards(fetchedCards);
         setHeroTitle(pageFields?.hero_title || pageData?.title || "");
         setHeroVideo(pageFields?.herovideo?.node?.mediaItemUrl || "");
@@ -365,6 +374,7 @@ export default function TheClove() {
         setSectionLogo(pageFields?.sectionLogo?.node?.sourceUrl || "");
         setSectionHeading(pageFields?.sectionHeading || "");
         setSectionDescription(pageFields?.sectionDescription || "");
+        setMarqueeItems(fetchedMarqueeItems);
         setErrorMsg("");
       })
       .catch((error) => {
@@ -417,6 +427,20 @@ export default function TheClove() {
     );
   };
 
+  const repeatedMarqueeItems = useMemo(() => {
+    const baseItems = marqueeItems.length
+      ? marqueeItems
+      : ["Commercial", "Residential"];
+
+    const output = [];
+
+    for (let i = 0; i < 12; i++) {
+      output.push(...baseItems);
+    }
+
+    return output;
+  }, [marqueeItems]);
+
   if (loading) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-white">
@@ -437,6 +461,29 @@ export default function TheClove() {
 
   return (
     <main>
+      <style jsx>{`
+        @keyframes marqueeLeft {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-50%);
+          }
+        }
+
+        .marquee {
+          overflow: hidden;
+          white-space: nowrap;
+          width: 100%;
+        }
+
+        .marquee-track {
+          display: flex;
+          width: max-content;
+          animation: marqueeLeft 22s linear infinite;
+        }
+      `}</style>
+
       <section className="relative h-screen w-full overflow-hidden">
         {heroVideo ? (
           <video
@@ -471,6 +518,23 @@ export default function TheClove() {
             >
               Register
             </a>
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-[#667062] py-6 overflow-hidden">
+        <div className="marquee">
+          <div className="marquee-track">
+            {repeatedMarqueeItems.map((item, index) => (
+              <span
+                key={`${item}-${index}`}
+                className={`text-[70px] uppercase font-light px-8 shrink-0 ${
+                  index % 2 === 0 ? "text-[#42B58B]" : "text-white"
+                }`}
+              >
+                {item}
+              </span>
+            ))}
           </div>
         </div>
       </section>
