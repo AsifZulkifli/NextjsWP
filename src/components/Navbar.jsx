@@ -17,6 +17,14 @@ const mainLinks = [
       { href: "/showcase", label: "Featured" },
     ],
   },
+    {
+    href: "/the-clove",
+    label: "The Clove",
+    sub: [
+      { href: "/the-clove", label: "Overview" },
+      { href: "/the-clove", label: "Features" },
+    ],
+  },
   {
     href: "/contact",
     label: "Contact",
