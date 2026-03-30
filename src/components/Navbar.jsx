@@ -26,14 +26,14 @@ const mainLinks = [
       { href: "/township", label: "Features" },
     ],
   },
-  {
-    href: "/showcase",
-    label: "Showcase",
-    sub: [
-      { href: "/showcase"},
-      { href: "/showcase"},
-    ],
-  },
+  // {
+  //   href: "/showcase",
+  //   label: "Showcase",
+  //   sub: [
+  //     { href: "/showcase"},
+  //     { href: "/showcase"},
+  //   ],
+  // },
   //   {
   //   href: "/the-clove",
   //   label: "The Clove",
@@ -42,14 +42,14 @@ const mainLinks = [
   //     { href: "/the-clove", label: "Features" },
   //   ],
   // },
-  {
-    href: "/contact",
-    label: "Contact",
-    sub: [
-      { href: "/contact", label: "Get in Touch" },
-      { href: "/contact", label: "Office" },
-    ],
-  },
+  // {
+  //   href: "/contact",
+  //   label: "Contact",
+  //   sub: [
+  //     { href: "/contact", label: "Get in Touch" },
+  //     { href: "/contact", label: "Office" },
+  //   ],
+  // },
 ];
 
 const bottomLinks = [
