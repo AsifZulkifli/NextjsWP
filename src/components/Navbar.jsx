@@ -10,21 +10,38 @@ const mainLinks = [
     sub: [{ href: "/", label: "Overview" }],
   },
   {
+    href: "/township",
+    label: "Township",
+    sub: [
+      { href: "/township", label: "Overview" },
+      { href: "/township", label: "Features" },
+    ],
+  },
+
+    {
+    href: "/homes",
+    label: "Homes",
+    sub: [
+      { href: "/township", label: "Overview" },
+      { href: "/township", label: "Features" },
+    ],
+  },
+  {
     href: "/showcase",
     label: "Showcase",
     sub: [
-      { href: "/showcase", label: "All Work" },
-      { href: "/showcase", label: "Featured" },
+      { href: "/showcase"},
+      { href: "/showcase"},
     ],
   },
-    {
-    href: "/the-clove",
-    label: "The Clove",
-    sub: [
-      { href: "/the-clove", label: "Overview" },
-      { href: "/the-clove", label: "Features" },
-    ],
-  },
+  //   {
+  //   href: "/the-clove",
+  //   label: "The Clove",
+  //   sub: [
+  //     { href: "/the-clove", label: "Overview" },
+  //     { href: "/the-clove", label: "Features" },
+  //   ],
+  // },
   {
     href: "/contact",
     label: "Contact",
