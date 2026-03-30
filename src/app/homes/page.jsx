@@ -1,17 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import client from "../../lib/apolloClient";
 import { gql } from "@apollo/client";
 
-const GET_CLOVE_DATA = gql`
-  query GetCloveData {
-    theCloves(first: 20, where: { orderby: { field: MENU_ORDER, order: ASC } }) {
+const GET_HOME_DATA = gql`
+  query GetHomeData {
+    homes(first: 20, where: { orderby: { field: MENU_ORDER, order: ASC } }) {
       nodes {
         id
         title
         slug
-        content
+        homeCategories {
+          nodes {
+            id
+            name
+            slug
+          }
+        }
         propertyFields {
           subtitle
           description
@@ -22,25 +28,28 @@ const GET_CLOVE_DATA = gql`
               sourceUrl
             }
           }
+          featureslink
+          learnmorelink
         }
       }
     }
   }
 `;
 
-export default function TheClove() {
+export default function Homes() {
   const [cards, setCards] = useState([]);
+  const [activeTab, setActiveTab] = useState("all");
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
     client
       .query({
-        query: GET_CLOVE_DATA,
+        query: GET_HOME_DATA,
         fetchPolicy: "no-cache",
       })
       .then((result) => {
-        const fetchedCards = result?.data?.theCloves?.nodes || [];
+        const fetchedCards = result?.data?.homes?.nodes || [];
         setCards(fetchedCards);
         setErrorMsg("");
       })
@@ -52,6 +61,35 @@ export default function TheClove() {
         setLoading(false);
       });
   }, []);
+
+  const tabs = useMemo(() => {
+    const termMap = new Map();
+
+    cards.forEach((card) => {
+      card.homeCategories?.nodes?.forEach((term) => {
+        if (!termMap.has(term.slug)) {
+          termMap.set(term.slug, {
+            id: term.id,
+            name: term.name,
+            slug: term.slug,
+          });
+        }
+      });
+    });
+
+    return [
+      { id: "all", name: "ALL", slug: "all" },
+      ...Array.from(termMap.values()),
+    ];
+  }, [cards]);
+
+  const filteredCards = useMemo(() => {
+    if (activeTab === "all") return cards;
+
+    return cards.filter((card) =>
+      card.homeCategories?.nodes?.some((term) => term.slug === activeTab)
+    );
+  }, [cards, activeTab]);
 
   if (loading) {
     return (
@@ -73,93 +111,140 @@ export default function TheClove() {
 
   return (
     <main>
-      <section className="bg-[#f0ebe3] px-8 py-20">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {cards.length === 0 ? (
-            <div className="col-span-full text-center text-gray-600">
-              No property cards found.
+      <section className="bg-[#f0ebe3] px-4 md:px-8 pt-28 md:pt-36 pb-10">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-8">
+            <div className="bg-white rounded-[999px] p-3 shadow-sm overflow-x-auto">
+              <div className="flex items-center gap-3 min-w-max">
+                {tabs.map((tab) => {
+                  const isActive = activeTab === tab.slug;
+
+                  return (
+                    <button
+                      key={tab.slug}
+                      type="button"
+                      onClick={() => setActiveTab(tab.slug)}
+                      className={`shrink-0 cursor-pointer rounded-full border px-5 py-2.5 text-sm uppercase whitespace-nowrap transition-all duration-200 ${
+                        isActive
+                          ? "bg-[#42B58B] border-[#42B58B] text-white font-semibold shadow-sm"
+                          : "bg-white border-transparent text-[#43515c] hover:border-[#42B58B] hover:text-[#42B58B]"
+                      }`}
+                    >
+                      {tab.name}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          ) : (
-            cards.map((card) => {
-              const imageUrl = card.propertyFields?.image?.node?.sourceUrl || "";
-              const subtitle = card.propertyFields?.subtitle || "";
-              const description =
-                card.propertyFields?.description ||
-                card.content?.replace(/<[^>]+>/g, "") ||
-                "";
-              const price = card.propertyFields?.price || "";
-              const monthlyprice = card.propertyFields?.monthlyprice || "";
+          </div>
 
-              return (
-                <div
-                  key={card.id}
-                  className="bg-white rounded-t-2xl overflow-hidden shadow-lg flex flex-col"
-                >
-                  {imageUrl ? (
-                    <div className="relative">
-                      <img
-                        src={imageUrl}
-                        alt={card.title || ""}
-                        className="w-full h-[220px] object-cover"
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-full h-[220px] bg-transparent" />
-                  )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredCards.length === 0 ? (
+              <div className="col-span-full text-center text-gray-600">
+                No home cards found.
+              </div>
+            ) : (
+              filteredCards.map((card) => {
+                const imageUrl = card.propertyFields?.image?.node?.sourceUrl || "";
+                const subtitle = card.propertyFields?.subtitle || "";
+                const description = card.propertyFields?.description || "";
+                const price = card.propertyFields?.price || "";
+                const monthlyprice = card.propertyFields?.monthlyprice || "";
+                const featuresLink = card.propertyFields?.featureslink || "";
+                const learnMoreLink = card.propertyFields?.learnmorelink || "";
 
-                  <div className="px-4 py-6 flex flex-col flex-1 gap-3">
-                    <div>
-                      <h3 className="font-serif text-[1.5rem] text-[#1a3a2a] mb-1">
-                        {card.title || ""}
-                      </h3>
-                      {subtitle && (
-                        <p className="text-gray-500 text-sm">{subtitle}</p>
-                      )}
-                    </div>
+                const learnMoreUrl = learnMoreLink
+                  ? learnMoreLink
+                  : card.slug
+                  ? `/property/${card.slug}`
+                  : "#";
 
-                    <hr className="border-gray-200" />
-
-                    {description && (
-                      <p className="text-gray-500 text-sm leading-relaxed flex-1">
-                        {description}
-                      </p>
+                return (
+                  <div
+                    key={card.id}
+                    className="bg-white rounded-t-2xl overflow-hidden shadow-lg flex flex-col"
+                  >
+                    {imageUrl ? (
+                      <div className="relative">
+                        <img
+                          src={imageUrl}
+                          alt={card.title || ""}
+                          className="w-full h-[220px] object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-full h-[220px] bg-transparent" />
                     )}
 
-                    <div className="grid grid-cols-2 gap-3 mt-2">
-                      <div className="bg-[#e8f5ef] rounded-lg px-4 py-3">
-                        <p className="text-gray-400 text-[11px] mb-0.5">From</p>
-                        <p className="text-[#1a3a2a] font-bold text-[20px]">
-                          {price}
-                        </p>
+                    <div className="px-4 py-6 flex flex-col flex-1 gap-3">
+                      <div>
+                        <h3 className="font-serif text-[1.5rem] text-[#1a3a2a] mb-1">
+                          {card.title || ""}
+                        </h3>
+                        {subtitle && (
+                          <p className="text-gray-500 text-sm">{subtitle}</p>
+                        )}
                       </div>
 
-                      <div className="bg-[#e8f5ef] rounded-lg px-4 py-3">
-                        <p className="text-gray-400 text-[11px] mb-0.5">From</p>
-                        <p className="text-[#1a3a2a] font-bold text-[20px]">
-                          {monthlyprice}
-                          {monthlyprice && (
-                            <span className="font-light text-xs"> /month</span>
-                          )}
-                        </p>
-                      </div>
-                    </div>
+                      <hr className="border-gray-200" />
 
-                    <div className="grid grid-cols-2 gap-3 mt-2">
-                      <button className="rounded-full border border-gray-300 text-gray-700 text-xs uppercase tracking-widest py-2.5 hover:border-[#42B58B] hover:text-[#42B58B] transition">
-                        Features
-                      </button>
-                      <a
-                        href={card.slug ? `/property/${card.slug}` : "#"}
-                        className="rounded-full bg-[#42B58B] text-white text-xs uppercase tracking-widest py-2.5 hover:bg-[#3d9a78] transition text-center"
-                      >
-                        Learn More
-                      </a>
+                      {description && (
+                        <p className="text-gray-500 text-sm leading-relaxed flex-1 whitespace-pre-line">
+                          {description}
+                        </p>
+                      )}
+
+                      <div className="grid grid-cols-2 gap-3 mt-2">
+                        <div className="bg-[#e8f5ef] rounded-lg px-4 py-3">
+                          <p className="text-gray-400 text-[11px] mb-0.5">From</p>
+                          <p className="text-[#1a3a2a] font-bold text-[20px]">
+                            {price}
+                          </p>
+                        </div>
+
+                        <div className="bg-[#e8f5ef] rounded-lg px-4 py-3">
+                          <p className="text-gray-400 text-[11px] mb-0.5">From</p>
+                          <p className="text-[#1a3a2a] font-bold text-[20px]">
+                            {monthlyprice}
+                            {monthlyprice && (
+                              <span className="font-light text-xs"> /month</span>
+                            )}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 mt-2">
+                        {featuresLink ? (
+                          <a
+                            href={featuresLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="rounded-full border border-gray-300 text-gray-700 text-xs uppercase tracking-widest py-2.5 hover:border-[#42B58B] hover:text-[#42B58B] transition text-center"
+                          >
+                            Features
+                          </a>
+                        ) : (
+                          <button
+                            type="button"
+                            className="rounded-full border border-gray-300 text-gray-700 text-xs uppercase tracking-widest py-2.5 hover:border-[#42B58B] hover:text-[#42B58B] transition"
+                          >
+                            Features
+                          </button>
+                        )}
+
+                        <a
+                          href={learnMoreUrl}
+                          className="rounded-full bg-[#42B58B] text-white text-xs uppercase tracking-widest py-2.5 hover:bg-[#3d9a78] transition text-center"
+                        >
+                          Learn More
+                        </a>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })
-          )}
+                );
+              })
+            )}
+          </div>
         </div>
       </section>
     </main>
