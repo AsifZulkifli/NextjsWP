@@ -1,184 +1,593 @@
+// "use client";
+
+// import { useMemo, useEffect, useRef } from "react";
+// import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+// import L from "leaflet";
+// import "leaflet/dist/leaflet.css";
+
+// // Fix default marker icons
+// delete L.Icon.Default.prototype._getIconUrl;
+// L.Icon.Default.mergeOptions({
+//   iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
+//   iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
+//   shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+// });
+
+// const mapContainerStyle = {
+//   width: "100%",
+//   height: "680px",
+//   borderRadius: "28px",
+//   overflow: "hidden",
+// };
+
+// // Amenity marker icon (green dot)
+// const amenityIcon = L.divIcon({
+//   className: "custom-amenity-icon",
+//   html: '<div style="background-color: #42B58B; width: 24px; height: 24px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);"></div>',
+//   iconSize: [24, 24],
+//   popupAnchor: [0, -12],
+// });
+
+// // Township badge icon
+// const createBadgeIcon = (label) =>
+//   L.divIcon({
+//     className: "township-badge-icon",
+//     html: `
+//       <div style="position: relative; display: flex; flex-direction: column; align-items: center;">
+//         <div style="background-color: #42B58B; width: 92px; height: 92px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold; text-align: center; text-transform: uppercase; padding: 0 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+//           <span style="display: inline-block; max-width: 80px;">${label}</span>
+//         </div>
+//         <div style="position: absolute; bottom: -12px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 14px solid #42B58B;"></div>
+//       </div>
+//     `,
+//     iconSize: [92, 104],
+//     popupAnchor: [0, -52],
+//   });
+
+// // Helper component to fit bounds after map loads
+// function FitBounds({ points }) {
+//   const map = useMap();
+
+//   useEffect(() => {
+//     if (!points || points.length === 0) return;
+
+//     // Create a LatLngBounds object from the points
+//     const bounds = L.latLngBounds(points);
+
+//     // Fit the map to the bounds with some padding (e.g., 50 pixels)
+//     map.fitBounds(bounds, { padding: [50, 50] });
+//   }, [map, points]);
+
+//   return null;
+// }
+
+// function TownshipMap({ mapConfig, amenities, highways, selectedAmenity, setSelectedAmenity }) {
+//   // Default center (fallback if no points)
+//   const defaultCenter = {
+//     lat: Number(mapConfig?.mapCenterLat || mapConfig?.mapPinLat || 3.319),
+//     lng: Number(mapConfig?.mapCenterLong || mapConfig?.mapPinLng || 101.576), // ✅ now uses mapCenterLong
+//   };
+//   const defaultZoom = Number(mapConfig?.mapZoom || 13);
+
+//   // Township pin position
+//   const pinPosition = {
+//     lat: Number(mapConfig?.mapPinLat || defaultCenter.lat),
+//     lng: Number(mapConfig?.mapPinLng || defaultCenter.lng),
+//   };
+
+//   // Group amenities by category for sidebar
+//   const groupedCategories = useMemo(() => {
+//     const map = {};
+//     amenities.forEach((item) => {
+//       const category = Array.isArray(item.category) ? item.category[0] : (item.category || "Other");
+//       if (!map[category]) map[category] = [];
+//       map[category].push(item);
+//     });
+//     return map;
+//   }, [amenities]);
+
+//   // Collect all points for auto‑zoom (township pin + all amenities)
+//   const allPoints = useMemo(() => {
+//     const points = [pinPosition];
+//     amenities.forEach((amenity) => {
+//       points.push(amenity.coordinates);
+//     });
+//     return points;
+//   }, [pinPosition, amenities]);
+
+//   const badgeIcon = useMemo(() => createBadgeIcon(mapConfig?.mapPinLabel || "Gamuda Gardens"), [mapConfig?.mapPinLabel]);
+
+//   // If there are no points (no amenities, no pin), fallback to default center/zoom.
+//   // The FitBounds component will handle auto‑zoom when points exist.
+//   const hasPoints = allPoints.length > 0;
+
+//   return (
+//     <div className="relative w-full" style={{ isolation: "isolate" }}>
+//       {/* Map container */}
+//       <div className="relative z-0 overflow-hidden rounded-[28px] shadow-[0_12px_40px_rgba(0,0,0,0.12)]">
+//         <MapContainer
+//           center={hasPoints ? allPoints[0] : defaultCenter}
+//           zoom={hasPoints ? undefined : defaultZoom}
+//           style={mapContainerStyle}
+//           zoomControl={true}
+//           className="leaflet-container"
+//         >
+//           <TileLayer
+//             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+//             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+//           />
+
+//           {/* Fit bounds after map loads */}
+//           {hasPoints && <FitBounds points={allPoints} />}
+
+//           {/* Township badge marker */}
+//           <Marker position={pinPosition} icon={badgeIcon} />
+
+//           {/* Amenity markers */}
+//           {amenities.map((amenity) => (
+//             <Marker
+//               key={amenity.id}
+//               position={amenity.coordinates}
+//               icon={amenityIcon}
+//               eventHandlers={{ click: () => setSelectedAmenity(amenity) }}
+//             >
+//               {selectedAmenity?.id === amenity.id && (
+//                 <Popup>
+//                   <div className="min-w-[180px] p-1">
+//                     <h4 className="text-sm font-semibold text-[#1a3a2a]">{amenity.name}</h4>
+//                     <p className="mt-1 text-xs text-gray-600">{amenity.category}</p>
+//                     {amenity.distance && <p className="mt-1 text-xs text-gray-500">Distance: {amenity.distance}</p>}
+//                   </div>
+//                 </Popup>
+//               )}
+//             </Marker>
+//           ))}
+//         </MapContainer>
+//       </div>
+
+//       {/* Sidebar – absolute with high z-index */}
+//       <div className="absolute left-4 top-4 z-50 flex w-[270px] flex-col gap-4 md:left-6 md:top-6">
+//         <div className="rounded-[22px] bg-[#ecebea] p-5 shadow-md">
+//           <h3 className="mb-3 text-[14px] font-bold uppercase tracking-wide text-[#1f1f1f]">Highway</h3>
+//           <div className="space-y-1">
+//             {highways.length === 0 ? (
+//               <p className="text-xs text-gray-500">No highways added.</p>
+//             ) : (
+//               highways.map((highway) => (
+//                 <div key={highway.id} className="text-[13px] uppercase tracking-wide text-[#333]">
+//                   {highway.name}
+//                 </div>
+//               ))
+//             )}
+//           </div>
+//         </div>
+
+//         <div className="rounded-[22px] bg-[#ecebea] p-5 shadow-md">
+//           <h3 className="mb-3 text-[14px] font-bold uppercase tracking-wide text-[#1f1f1f]">Amenities</h3>
+//           <div className="space-y-1">
+//             {Object.keys(groupedCategories).length === 0 ? (
+//               <p className="text-xs text-gray-500">No amenities added.</p>
+//             ) : (
+//               Object.keys(groupedCategories).map((category) => (
+//                 <div key={category} className="text-[13px] uppercase tracking-wide text-[#333]">
+//                   {category}
+//                 </div>
+//               ))
+//             )}
+//           </div>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
+
+// export default TownshipMap;
+
 "use client";
 
-import { useMemo, useEffect, useRef } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { useMemo, useState } from "react";
+import dynamic from "next/dynamic";
+import {
+  Leaf,
+  GraduationCap,
+  Cross,
+  CalendarDays,
+  ShoppingCart,
+  Dumbbell,
+  MapPin as MapPinIcon,
+} from "lucide-react";
+
+const MapContainer = dynamic(
+  async () => {
+    const mod = await import("react-leaflet");
+    return mod.MapContainer;
+  },
+  { ssr: false }
+);
+
+const TileLayer = dynamic(
+  async () => {
+    const mod = await import("react-leaflet");
+    return mod.TileLayer;
+  },
+  { ssr: false }
+);
+
+const Marker = dynamic(
+  async () => {
+    const mod = await import("react-leaflet");
+    return mod.Marker;
+  },
+  { ssr: false }
+);
+
+const Popup = dynamic(
+  async () => {
+    const mod = await import("react-leaflet");
+    return mod.Popup;
+  },
+  { ssr: false }
+);
+
+const useMapDynamic = () => import("react-leaflet");
+
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-// Fix default marker icons
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
-  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+  iconRetinaUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
+  iconUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
+  shadowUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
 });
 
-const mapContainerStyle = {
-  width: "100%",
-  height: "680px",
-  borderRadius: "28px",
-  overflow: "hidden",
+const amenityCategoryIcons = {
+  PARKS: Leaf,
+  EDUCATION: GraduationCap,
+  CLINICS: Cross,
+  "EVENT SPACE": CalendarDays,
+  "DAILY ESSENTIALS": ShoppingCart,
+  WELLNESS: Dumbbell,
 };
 
-// Amenity marker icon (green dot)
-const amenityIcon = L.divIcon({
-  className: "custom-amenity-icon",
-  html: '<div style="background-color: #42B58B; width: 24px; height: 24px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);"></div>',
-  iconSize: [24, 24],
-  popupAnchor: [0, -12],
-});
+const categoryColorMap = {
+  PARKS: "green",
+  EDUCATION: "red",
+  CLINICS: "gray",
+  "EVENT SPACE": "pink",
+  "DAILY ESSENTIALS": "green",
+  WELLNESS: "red",
+};
 
-// Township badge icon
-const createBadgeIcon = (label) =>
-  L.divIcon({
-    className: "township-badge-icon",
-    html: `
-      <div style="position: relative; display: flex; flex-direction: column; align-items: center;">
-        <div style="background-color: #42B58B; width: 92px; height: 92px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold; text-align: center; text-transform: uppercase; padding: 0 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-          <span style="display: inline-block; max-width: 80px;">${label}</span>
-        </div>
-        <div style="position: absolute; bottom: -12px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 14px solid #42B58B;"></div>
-      </div>
-    `,
-    iconSize: [92, 104],
-    popupAnchor: [0, -52],
-  });
-
-// Helper component to fit bounds after map loads
-function FitBounds({ points }) {
-  const map = useMap();
-
-  useEffect(() => {
-    if (!points || points.length === 0) return;
-
-    // Create a LatLngBounds object from the points
-    const bounds = L.latLngBounds(points);
-
-    // Fit the map to the bounds with some padding (e.g., 50 pixels)
-    map.fitBounds(bounds, { padding: [50, 50] });
-  }, [map, points]);
-
-  return null;
+function getPinColor(type) {
+  switch (type) {
+    case "green":
+      return "#47B58A";
+    case "red":
+      return "#EB5A4D";
+    case "gray":
+      return "#CFCBC8";
+    case "pink":
+      return "#E95AC6";
+    default:
+      return "#47B58A";
+  }
 }
 
-function TownshipMap({ mapConfig, amenities, highways, selectedAmenity, setSelectedAmenity }) {
-  // Default center (fallback if no points)
+function createAmenityIcon(type = "green") {
+  const bg = getPinColor(type);
+
+  return L.divIcon({
+    className: "custom-map-pin",
+    html: `
+      <div style="
+        width: 42px;
+        height: 42px;
+        border-radius: 9999px;
+        background: ${bg};
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        box-shadow: 0 6px 16px rgba(0,0,0,0.18);
+        border: 2px solid rgba(255,255,255,0.9);
+      ">
+        <div style="
+          width: 14px;
+          height: 14px;
+          border-radius: 9999px;
+          background: rgba(255,255,255,0.92);
+        "></div>
+      </div>
+    `,
+    iconSize: [42, 42],
+    iconAnchor: [21, 21],
+    popupAnchor: [0, -18],
+  });
+}
+
+function createTownshipBadge(label = "GAMUDA GARDENS") {
+  return L.divIcon({
+    className: "township-badge-icon",
+    html: `
+      <div style="
+        width: 120px;
+        height: 120px;
+        border-radius: 9999px;
+        background: #41B88C;
+        color: white;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        text-align:center;
+        box-shadow: 0 10px 24px rgba(0,0,0,0.22);
+        padding: 12px;
+        font-family: serif;
+        line-height: 1.1;
+      ">
+        <div>
+          <div style="font-size:11px; letter-spacing:0.18em; font-weight:500;">
+            GAMUDA
+          </div>
+          <div style="font-size:26px; font-weight:300;">
+            ${label.replace(/^GAMUDA\s*/i, "")}
+          </div>
+        </div>
+      </div>
+    `,
+    iconSize: [120, 120],
+    iconAnchor: [60, 60],
+  });
+}
+
+function FitBounds({ points }) {
+  const [MapHooks, setMapHooks] = useState(null);
+
+  useMemo(() => {
+    useMapDynamic().then((mod) => setMapHooks(mod));
+  }, []);
+
+  if (!MapHooks?.useMap) return null;
+
+  const Inner = () => {
+    const map = MapHooks.useMap();
+
+    useMemo(() => {
+      if (!points?.length) return;
+      const bounds = L.latLngBounds(points);
+      map.fitBounds(bounds, { padding: [80, 80] });
+    }, [map, points]);
+
+    return null;
+  };
+
+  return <Inner />;
+}
+
+function AmenityIcon({ Icon }) {
+  return (
+    <div className="flex h-9 w-9 items-center justify-center rounded-full border border-[#2FAE77] text-[#2FAE77]">
+      <Icon size={18} strokeWidth={2} />
+    </div>
+  );
+}
+
+export default function TownshipMap({
+  mapConfig,
+  amenities,
+  highways,
+  selectedAmenity,
+  setSelectedAmenity,
+}) {
+  const [highwayEnabled, setHighwayEnabled] = useState(true);
+  const [amenityEnabled, setAmenityEnabled] = useState(true);
+
   const defaultCenter = {
     lat: Number(mapConfig?.mapCenterLat || mapConfig?.mapPinLat || 3.319),
-    lng: Number(mapConfig?.mapCenterLong || mapConfig?.mapPinLng || 101.576), // ✅ now uses mapCenterLong
+    lng: Number(mapConfig?.mapCenterLong || mapConfig?.mapPinLng || 101.576),
   };
-  const defaultZoom = Number(mapConfig?.mapZoom || 13);
 
-  // Township pin position
   const pinPosition = {
     lat: Number(mapConfig?.mapPinLat || defaultCenter.lat),
     lng: Number(mapConfig?.mapPinLng || defaultCenter.lng),
   };
 
-  // Group amenities by category for sidebar
-  const groupedCategories = useMemo(() => {
+  const allPoints = useMemo(() => {
+    const points = [pinPosition];
+    amenities.forEach((item) => {
+      if (
+        item?.coordinates &&
+        !Number.isNaN(item.coordinates.lat) &&
+        !Number.isNaN(item.coordinates.lng)
+      ) {
+        points.push(item.coordinates);
+      }
+    });
+    return points;
+  }, [amenities, pinPosition]);
+
+  const groupedAmenities = useMemo(() => {
     const map = {};
     amenities.forEach((item) => {
-      const category = Array.isArray(item.category) ? item.category[0] : (item.category || "Other");
+      const category = Array.isArray(item.category)
+        ? item.category[0]
+        : item.category || "OTHER";
+
       if (!map[category]) map[category] = [];
       map[category].push(item);
     });
     return map;
   }, [amenities]);
 
-  // Collect all points for auto‑zoom (township pin + all amenities)
-  const allPoints = useMemo(() => {
-    const points = [pinPosition];
-    amenities.forEach((amenity) => {
-      points.push(amenity.coordinates);
-    });
-    return points;
-  }, [pinPosition, amenities]);
+  const amenityCategories = useMemo(() => Object.keys(groupedAmenities), [groupedAmenities]);
 
-  const badgeIcon = useMemo(() => createBadgeIcon(mapConfig?.mapPinLabel || "Gamuda Gardens"), [mapConfig?.mapPinLabel]);
-
-  // If there are no points (no amenities, no pin), fallback to default center/zoom.
-  // The FitBounds component will handle auto‑zoom when points exist.
-  const hasPoints = allPoints.length > 0;
+  const townshipBadge = useMemo(
+    () => createTownshipBadge(mapConfig?.mapPinLabel || "GAMUDA GARDENS"),
+    [mapConfig?.mapPinLabel]
+  );
 
   return (
-    <div className="relative w-full" style={{ isolation: "isolate" }}>
-      {/* Map container */}
-      <div className="relative z-0 overflow-hidden rounded-[28px] shadow-[0_12px_40px_rgba(0,0,0,0.12)]">
-        <MapContainer
-          center={hasPoints ? allPoints[0] : defaultCenter}
-          zoom={hasPoints ? undefined : defaultZoom}
-          style={mapContainerStyle}
-          zoomControl={true}
-          className="leaflet-container"
-        >
-          <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          />
+    <section className="w-full bg-white">
+      <div className="relative mx-auto h-[720px] w-full overflow-hidden rounded-[28px] bg-[#e9e4d8] shadow-[0_18px_40px_rgba(0,0,0,0.14)] lg:h-[685px]">
+        <div className="absolute inset-0 z-0">
+          <MapContainer
+            center={[defaultCenter.lat, defaultCenter.lng]}
+            zoom={13}
+            style={{ width: "100%", height: "100%" }}
+            zoomControl={true}
+            className="h-full w-full"
+          >
+            <TileLayer
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            />
 
-          {/* Fit bounds after map loads */}
-          {hasPoints && <FitBounds points={allPoints} />}
+            {allPoints.length > 0 && <FitBounds points={allPoints} />}
 
-          {/* Township badge marker */}
-          <Marker position={pinPosition} icon={badgeIcon} />
+            <Marker position={[pinPosition.lat, pinPosition.lng]} icon={townshipBadge} />
 
-          {/* Amenity markers */}
-          {amenities.map((amenity) => (
-            <Marker
-              key={amenity.id}
-              position={amenity.coordinates}
-              icon={amenityIcon}
-              eventHandlers={{ click: () => setSelectedAmenity(amenity) }}
+            {amenityEnabled &&
+              amenities.map((amenity) => {
+                const category = Array.isArray(amenity.category)
+                  ? amenity.category[0]
+                  : amenity.category || "OTHER";
+
+                const pinType = categoryColorMap[category] || "green";
+                const icon = createAmenityIcon(pinType);
+
+                return (
+                  <Marker
+                    key={amenity.id}
+                    position={[amenity.coordinates.lat, amenity.coordinates.lng]}
+                    icon={icon}
+                    eventHandlers={{
+                      click: () => setSelectedAmenity(amenity),
+                    }}
+                  >
+                    <Popup>
+                      <div className="min-w-[180px] p-1">
+                        <h4 className="text-sm font-semibold text-[#1a3a2a]">
+                          {amenity.name}
+                        </h4>
+                        <p className="mt-1 text-xs text-gray-600">{category}</p>
+                        {amenity.distance && (
+                          <p className="mt-1 text-xs text-gray-500">
+                            Distance: {amenity.distance}
+                          </p>
+                        )}
+                      </div>
+                    </Popup>
+                  </Marker>
+                );
+              })}
+          </MapContainer>
+        </div>
+
+        <div className="pointer-events-none absolute inset-0 z-10 bg-white/10" />
+
+        <div className="absolute left-6 top-6 z-30 w-[340px] rounded-[26px] bg-[#f3f2f0] p-7 shadow-[0_20px_40px_rgba(0,0,0,0.12)] md:left-12 md:top-12 md:w-[360px]">
+          <div className="mb-8 flex items-center justify-between">
+            <h3 className="text-[22px] font-extrabold uppercase tracking-wide text-black">
+              Highway
+            </h3>
+
+            <button
+              type="button"
+              onClick={() => setHighwayEnabled((prev) => !prev)}
+              className={`relative h-[28px] w-[64px] rounded-full transition ${
+                highwayEnabled ? "bg-[#7c7b7a]" : "bg-gray-300"
+              }`}
             >
-              {selectedAmenity?.id === amenity.id && (
-                <Popup>
-                  <div className="min-w-[180px] p-1">
-                    <h4 className="text-sm font-semibold text-[#1a3a2a]">{amenity.name}</h4>
-                    <p className="mt-1 text-xs text-gray-600">{amenity.category}</p>
-                    {amenity.distance && <p className="mt-1 text-xs text-gray-500">Distance: {amenity.distance}</p>}
-                  </div>
-                </Popup>
-              )}
-            </Marker>
-          ))}
-        </MapContainer>
-      </div>
+              <span
+                className={`absolute top-[3px] h-[22px] w-[22px] rounded-full bg-white shadow transition ${
+                  highwayEnabled ? "left-[39px]" : "left-[3px]"
+                }`}
+              />
+            </button>
+          </div>
 
-      {/* Sidebar – absolute with high z-index */}
-      <div className="absolute left-4 top-4 z-50 flex w-[270px] flex-col gap-4 md:left-6 md:top-6">
-        <div className="rounded-[22px] bg-[#ecebea] p-5 shadow-md">
-          <h3 className="mb-3 text-[14px] font-bold uppercase tracking-wide text-[#1f1f1f]">Highway</h3>
-          <div className="space-y-1">
+          <div className="space-y-5">
             {highways.length === 0 ? (
-              <p className="text-xs text-gray-500">No highways added.</p>
-            ) : (
-              highways.map((highway) => (
-                <div key={highway.id} className="text-[13px] uppercase tracking-wide text-[#333]">
-                  {highway.name}
+              <p className="text-sm text-gray-500">No highways available.</p>
+            ) : highwayEnabled ? (
+              highways.map((item) => (
+                <div key={item.id} className="flex items-center gap-6">
+                  <span
+                    className="block h-[5px] w-[52px] rounded-full"
+                    style={{ backgroundColor: item.linecolor || "#42B58B" }}
+                  />
+                  <span className="text-[14px] font-medium uppercase tracking-[0.02em] text-[#1e1e1e]">
+                    {item.name}
+                  </span>
                 </div>
               ))
+            ) : (
+              <p className="text-sm text-gray-500">Highway list hidden.</p>
             )}
           </div>
         </div>
 
-        <div className="rounded-[22px] bg-[#ecebea] p-5 shadow-md">
-          <h3 className="mb-3 text-[14px] font-bold uppercase tracking-wide text-[#1f1f1f]">Amenities</h3>
-          <div className="space-y-1">
-            {Object.keys(groupedCategories).length === 0 ? (
-              <p className="text-xs text-gray-500">No amenities added.</p>
+        <div className="absolute left-6 top-[210px] z-30 w-[340px] rounded-[26px] bg-[#f3f2f0] p-7 shadow-[0_20px_40px_rgba(0,0,0,0.12)] md:left-12 md:top-[255px] md:w-[360px]">
+          <div className="mb-8 flex items-center justify-between">
+            <h3 className="text-[22px] font-extrabold uppercase tracking-wide text-black">
+              Amenities
+            </h3>
+
+            <button
+              type="button"
+              onClick={() => setAmenityEnabled((prev) => !prev)}
+              className={`relative h-[28px] w-[64px] rounded-full transition ${
+                amenityEnabled ? "bg-[#7c7b7a]" : "bg-gray-300"
+              }`}
+            >
+              <span
+                className={`absolute top-[3px] h-[22px] w-[22px] rounded-full bg-white shadow transition ${
+                  amenityEnabled ? "left-[39px]" : "left-[3px]"
+                }`}
+              />
+            </button>
+          </div>
+
+          <div className="space-y-5">
+            {amenityCategories.length === 0 ? (
+              <p className="text-sm text-gray-500">No amenities available.</p>
+            ) : amenityEnabled ? (
+              amenityCategories.map((label) => {
+                const Icon = amenityCategoryIcons[label] || MapPinIcon;
+
+                return (
+                  <div key={label} className="flex items-center gap-4">
+                    <AmenityIcon Icon={Icon} />
+                    <span className="text-[14px] font-medium uppercase tracking-[0.03em] text-[#1d1d1d]">
+                      {label}
+                    </span>
+                  </div>
+                );
+              })
             ) : (
-              Object.keys(groupedCategories).map((category) => (
-                <div key={category} className="text-[13px] uppercase tracking-wide text-[#333]">
-                  {category}
-                </div>
-              ))
+              <p className="text-sm text-gray-500">Amenity list hidden.</p>
             )}
           </div>
         </div>
       </div>
-    </div>
+
+      {selectedAmenity && (
+        <div className="mt-6 rounded-[22px] bg-white p-5 shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
+          <p className="text-xs uppercase tracking-wide text-[#42B58B]">
+            {Array.isArray(selectedAmenity.category)
+              ? selectedAmenity.category[0]
+              : selectedAmenity.category}
+          </p>
+          <h4 className="mt-1 text-lg font-semibold text-[#1a3a2a]">
+            {selectedAmenity.name}
+          </h4>
+          {selectedAmenity.distance && (
+            <p className="mt-2 text-sm text-gray-500">{selectedAmenity.distance}</p>
+          )}
+        </div>
+      )}
+    </section>
   );
 }
-
-export default TownshipMap;
