@@ -6,7 +6,7 @@ import Link from "next/link";
 const mainLinks = [
   {
     href: "/",
-    label: "Home",
+    label: "Homepage",
     sub: [{ href: "/", label: "Overview" }],
   },
   {
@@ -21,6 +21,14 @@ const mainLinks = [
     {
     href: "/homes",
     label: "Homes",
+    sub: [
+      { href: "/township", label: "Overview" },
+      { href: "/township", label: "Features" },
+    ],
+  },
+    {
+    href: "/event_system",
+    label: "Event System",
     sub: [
       { href: "/township", label: "Overview" },
       { href: "/township", label: "Features" },
