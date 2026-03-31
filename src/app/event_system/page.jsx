@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { gql } from "@apollo/client";
 import client from "../../lib/apolloClient";
 import Image from "next/image";
-import { CalendarDays, Clock3 } from "lucide-react";
+import { CalendarDays, Clock3, MapPin } from "lucide-react";
 
 const GET_PAST_EVENTS = gql`
   query GetPastEvents {
@@ -25,6 +25,7 @@ const GET_PAST_EVENTS = gql`
           eventEndDate
           eventStartTime
           eventEndTime
+          eventLocation
           buttonLink
         }
       }
@@ -181,8 +182,8 @@ export default function PastEventsPage() {
                   const eventTitle = event?.title || "Event";
                   const eventImage =
                     fields?.image?.node?.sourceUrl || "/placeholder.jpg";
-                  const eventAlt =
-                    fields?.image?.node?.altText || eventTitle;
+                  const eventAlt = fields?.image?.node?.altText || eventTitle;
+                  const eventLocation = fields?.eventLocation || "";
 
                   const dateRange = formatDateRange(
                     fields?.eventStartDate,
@@ -239,6 +240,16 @@ export default function PastEventsPage() {
                                 className="mt-[2px] text-[#9ac79b]"
                               />
                               <span>{timeRange}</span>
+                            </div>
+                          )}
+
+                          {eventLocation && (
+                            <div className="flex items-start gap-3 text-[15px] text-[#111111]">
+                              <MapPin
+                                size={18}
+                                className="mt-[2px] text-[#9ac79b]"
+                              />
+                              <span>{eventLocation}</span>
                             </div>
                           )}
                         </div>
