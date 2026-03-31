@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { gql } from "@apollo/client";
 import client from "../../lib/apolloClient";
 import dynamic from "next/dynamic";
 import Image from "next/image";
+import { SlidersHorizontal, ChevronDown, Trophy } from "lucide-react";
 
 // Dynamically import the map component (no SSR)
 const TownshipMap = dynamic(() => import("./TownshipMap"), { ssr: false });
@@ -84,6 +85,7 @@ export default function TownshipPage() {
   const [highways, setHighways] = useState([]);
   const [awards, setAwards] = useState([]);
   const [visibleAwardsCount, setVisibleAwardsCount] = useState(3);
+  const [selectedYear, setSelectedYear] = useState("all");
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -149,11 +151,36 @@ export default function TownshipPage() {
       });
   }, []);
 
-  const visibleAwards = awards.slice(0, visibleAwardsCount);
-  const hasMoreAwards = visibleAwardsCount < awards.length;
+  const yearOptions = useMemo(() => {
+    const years = awards
+      .map((award) => award?.awardFields?.awardYear)
+      .filter(Boolean);
+
+    return [...new Set(years)].sort((a, b) => Number(b) - Number(a));
+  }, [awards]);
+
+  const filteredAwards = useMemo(() => {
+    const filtered =
+      selectedYear === "all"
+        ? awards
+        : awards.filter(
+            (award) =>
+              String(award?.awardFields?.awardYear) === String(selectedYear)
+          );
+
+    return filtered;
+  }, [awards, selectedYear]);
+
+  const visibleAwards = filteredAwards.slice(0, visibleAwardsCount);
+  const hasMoreAwards = visibleAwardsCount < filteredAwards.length;
 
   const handleLoadMoreAwards = () => {
     setVisibleAwardsCount((prev) => prev + 3);
+  };
+
+  const handleYearChange = (e) => {
+    setSelectedYear(e.target.value);
+    setVisibleAwardsCount(3);
   };
 
   if (loading) {
@@ -221,75 +248,106 @@ export default function TownshipPage() {
         </div>
       </section>
 
-      <section className="bg-[#f5f0e8] px-6 py-20 md:px-10 lg:px-16">
+      <section className="bg-[#f3f1ef] px-6 py-20 md:px-10 lg:px-16">
         <div className="mx-auto max-w-7xl">
-          <div className="mb-14 text-center">
-            <h2 className="text-[42px] leading-none font-serif text-[#5b6b5c] md:text-[58px]">
+          <div className="mb-12 text-center">
+            <h2 className="font-serif text-[52px] leading-none text-[#1f5a36] md:text-[72px]">
               Awards
             </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-[16px] text-[#2f2f2f]">
+            <p className="mx-auto mt-6 max-w-3xl text-[18px] leading-relaxed text-[#222222]">
               Excellence is not just a catchphrase at Gamuda Land, but truly a
               way of life.
             </p>
           </div>
 
-          {awards.length === 0 ? (
+          <div className="mb-10 flex justify-end">
+            <div className="relative w-full max-w-[240px]">
+              <div className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#4a4a4a]">
+                <SlidersHorizontal size={18} />
+              </div>
+
+              <select
+                value={selectedYear}
+                onChange={handleYearChange}
+                className="h-[52px] w-full appearance-none rounded-[12px] border border-[#e5e5e5] bg-white pl-12 pr-12 text-[18px] text-[#1f5a36] shadow-[0_4px_12px_rgba(0,0,0,0.08)] outline-none"
+              >
+                <option value="all">Year</option>
+                {yearOptions.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
+
+              <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[#8b8b8b]">
+                <ChevronDown size={18} />
+              </div>
+            </div>
+          </div>
+
+          {filteredAwards.length === 0 ? (
             <div className="py-12 text-center text-gray-500">
               No awards available.
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
                 {visibleAwards.map((award) => {
                   const fields = award?.awardFields || {};
                   const awardTitle = fields.awardname || award.title || "Award";
                   const awardImage =
                     fields.awardthumbnail?.node?.sourceUrl ||
                     "/placeholder.jpg";
-                  const awardLogo =
-                    fields.awardlogo?.node?.sourceUrl ||
-                    "/placeholder-logo.png";
+                  const awardLink = fields.awardlink || "#";
                   const awardYear = fields.awardYear || "";
+                  const awardDescription = awardTitle;
 
                   return (
                     <a
                       key={award.id}
-                      href={fields.awardlink || "#"}
+                      href={awardLink}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="group block overflow-hidden rounded-tr-[56px] rounded-bl-[56px] bg-white shadow-[0_10px_30px_rgba(0,0,0,0.08)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(0,0,0,0.12)]"
+                      className="group block overflow-hidden rounded-[24px] bg-[#f9f8f5] shadow-[0_6px_16px_rgba(0,0,0,0.14)] transition duration-300 hover:-translate-y-1"
                     >
-                      <div className="relative h-[240px] w-full overflow-hidden rounded-tr-[56px]">
-                        <Image
-                          src={awardImage}
-                          alt={awardTitle}
-                          fill
-                          unoptimized
-                          className="object-cover transition duration-500 group-hover:scale-105"
-                        />
-                      </div>
-
-                      <div className="relative px-5 pb-7 pt-4">
-                        {awardYear && (
-                          <div className="mb-4 inline-block rounded-md border border-[#8cc08c] bg-[#eef8ee] px-4 py-1 text-sm font-medium text-[#5da16c]">
-                            {awardYear}
-                          </div>
-                        )}
-
-                        <div className="absolute right-5 top-[-28px] flex h-[62px] w-[62px] items-center justify-center rounded-full border-4 border-white bg-white shadow-md">
+                      <div className="relative">
+                        <div className="relative h-[245px] w-full overflow-hidden">
                           <Image
-                            src={awardLogo}
-                            alt={`${awardTitle} logo`}
-                            width={42}
-                            height={42}
+                            src={awardImage}
+                            alt={awardTitle}
+                            fill
                             unoptimized
-                            className="object-contain"
+                            className="object-cover transition duration-500 group-hover:scale-105"
                           />
                         </div>
 
-                        <h3 className="max-w-[85%] font-serif text-[20px] font-semibold leading-[1.35] text-[#5f6a60]">
+                        {awardYear && (
+                          <div className="absolute bottom-[-18px] left-1/2 -translate-x-1/2">
+                            <span className="inline-flex min-w-[88px] items-center justify-center rounded-[9px] border border-[#67c79d] bg-[#f5f5f0] px-5 py-2 text-[18px] font-medium text-[#39b77d] shadow-sm">
+                              {awardYear}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex min-h-[142px] items-center justify-center px-8 pb-8 pt-12 text-center">
+                        <h3 className="font-serif text-[22px] leading-[1.15] text-[#1f5a36] md:text-[24px]">
                           {awardTitle}
                         </h3>
+                      </div>
+
+                      <div className="relative border-t border-[#d8d8d8]">
+                        <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2">
+                          <div className="flex h-[40px] w-[40px] items-center justify-center rounded-full bg-[#49bf8d] shadow-sm">
+                            <Trophy size={16} className="text-white" />
+                          </div>
+                        </div>
+
+                        <div className="px-8 pb-10 pt-10 text-center">
+                          <p className="text-[18px] leading-[1.35] text-[#255638]">
+                            {awardDescription}
+                          </p>
+                        </div>
                       </div>
                     </a>
                   );
