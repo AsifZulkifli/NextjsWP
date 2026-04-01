@@ -17,9 +17,6 @@ const GET_TOWNSHIP_DATA = gql`
         id
         title
         mapSettingFields {
-          mapCenterLat
-          mapCenterLong
-          mapZoom
           mapPinLabel
           mapPinLat
           mapPinLng
@@ -65,11 +62,7 @@ const GET_TOWNSHIP_DATA = gql`
               sourceUrl
             }
           }
-          awardlogo {
-            node {
-              sourceUrl
-            }
-          }
+          awardSubscription
           awardlink
           awardYear
         }
@@ -294,13 +287,18 @@ export default function TownshipPage() {
               <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
                 {visibleAwards.map((award) => {
                   const fields = award?.awardFields || {};
-                  const awardTitle = fields.awardname || award.title || "Award";
-                  const awardImage =
+                  const awardName = fields.awardname || award.title || "Award";
+                  const awardThumbnail =
                     fields.awardthumbnail?.node?.sourceUrl ||
                     "/placeholder.jpg";
+                  const awardSubscription = fields.awardSubscription;
                   const awardLink = fields.awardlink || "#";
                   const awardYear = fields.awardYear || "";
-                  const awardDescription = awardTitle;
+
+                  const isSubscriptionUrl =
+                    awardSubscription &&
+                    (awardSubscription.startsWith("http") ||
+                      awardSubscription.startsWith("/"));
 
                   return (
                     <a
@@ -313,8 +311,8 @@ export default function TownshipPage() {
                       <div className="relative">
                         <div className="relative h-[245px] w-full overflow-hidden">
                           <Image
-                            src={awardImage}
-                            alt={awardTitle}
+                            src={awardThumbnail}
+                            alt={awardName}
                             fill
                             unoptimized
                             className="object-cover transition duration-500 group-hover:scale-105"
@@ -332,7 +330,7 @@ export default function TownshipPage() {
 
                       <div className="flex min-h-[142px] items-center justify-center px-8 pb-8 pt-12 text-center">
                         <h3 className="font-serif text-[22px] leading-[1.15] text-[#1f5a36] md:text-[24px]">
-                          {awardTitle}
+                          {awardName}
                         </h3>
                       </div>
 
@@ -344,9 +342,26 @@ export default function TownshipPage() {
                         </div>
 
                         <div className="px-8 pb-10 pt-10 text-center">
-                          <p className="text-[18px] leading-[1.35] text-[#255638]">
-                            {awardDescription}
-                          </p>
+                          {awardSubscription ? (
+                            isSubscriptionUrl ? (
+                              <div className="relative mx-auto h-16 w-32">
+                                <Image
+                                  src={awardSubscription}
+                                  alt={`${awardName} subscription`}
+                                  fill
+                                  unoptimized
+                                  className="object-contain"
+                                />
+                              </div>
+                            ) : (
+                              <p className="text-[18px] leading-[1.35] text-[#255638]">
+                                {awardSubscription}
+                              </p>
+                            )
+                          ) : (
+                            // Empty content – preserve spacing
+                            <div className="h-4" />
+                          )}
                         </div>
                       </div>
                     </a>
