@@ -24,7 +24,7 @@ This project is a Next.js web application using Tailwind CSS for styling. It fea
 
 ## Features
 - Responsive navigation menu with animated hamburger icon
-- Multiple content pages (Homepage, Township, Homes, Event System, Showcase, Contact)
+- Multiple content pages (Homepage, Township, Homes, Event System)
 - Tailwind CSS for rapid UI development
 - Modular and scalable folder structure
 
