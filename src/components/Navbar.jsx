@@ -3,6 +3,63 @@
 import { useState } from "react";
 import Link from "next/link";
 
+// const mainLinks = [
+//   {
+//     href: "/",
+//     label: "Homepage",
+//     sub: [{ href: "/", label: "Overview" }],
+//   },
+//   {
+//     href: "/township",
+//     label: "Township",
+//     sub: [
+//       { href: "/township", label: "Overview" },
+//       { href: "/township", label: "Features" },
+//     ],
+//   },
+
+//     {
+//     href: "/homes",
+//     label: "Homes",
+//     sub: [
+//       { href: "/township", label: "Overview" },
+//       { href: "/township", label: "Features" },
+//     ],
+//   },
+//     {
+//     href: "/event_system",
+//     label: "Event System",
+//     sub: [
+//       { href: "/township", label: "Overview" },
+//       { href: "/township", label: "Features" },
+//     ],
+//   },
+//   // {
+//   //   href: "/showcase",
+//   //   label: "Showcase",
+//   //   sub: [
+//   //     { href: "/showcase"},
+//   //     { href: "/showcase"},
+//   //   ],
+//   // },
+//   //   {
+//   //   href: "/the-clove",
+//   //   label: "The Clove",
+//   //   sub: [
+//   //     { href: "/the-clove", label: "Overview" },
+//   //     { href: "/the-clove", label: "Features" },
+//   //   ],
+//   // },
+//   // {
+//   //   href: "/contact",
+//   //   label: "Contact",
+//   //   sub: [
+//   //     { href: "/contact", label: "Get in Touch" },
+//   //     { href: "/contact", label: "Office" },
+//   //   ],
+//   // },
+// ];
+
 const mainLinks = [
   {
     href: "/",
@@ -12,27 +69,17 @@ const mainLinks = [
   {
     href: "/township",
     label: "Township",
-    sub: [
-      { href: "/township", label: "Overview" },
-      { href: "/township", label: "Features" },
-    ],
+    sub: [], // Removed the two "/township" sub-items
   },
-
-    {
+  {
     href: "/homes",
     label: "Homes",
-    sub: [
-      { href: "/township", label: "Overview" },
-      { href: "/township", label: "Features" },
-    ],
+    sub: [], // Removed the two "/township" sub-items
   },
-    {
+  {
     href: "/event_system",
-    label: "Event System",
-    sub: [
-      { href: "/township", label: "Overview" },
-      { href: "/township", label: "Features" },
-    ],
+    label: "Event",
+    sub: [], // Removed the two "/township" sub-items
   },
   // {
   //   href: "/showcase",
