@@ -168,7 +168,7 @@ export default function PastEventsPage() {
 
   return (
     <main className="pt-28 md:pt-32">
-          // Formats time for display
+          {/* // Formats time for display */}
       <section className="bg-[#f5f0e8] px-6 py-20 md:px-10 lg:px-16">
         <div className="mx-auto max-w-7xl">
           <div className="mb-14 text-center">
@@ -180,7 +180,7 @@ export default function PastEventsPage() {
             </p>
           </div>
 
-          // Formats date range for event
+          {/* // Formats date range for event */}
           {events.length === 0 ? (
             <div className="py-12 text-center text-gray-500">
               No past events available.

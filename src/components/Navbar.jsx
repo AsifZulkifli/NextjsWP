@@ -63,13 +63,15 @@ import { usePathname } from "next/navigation";
 
 const mainLinks = [
   {
-    label: "Township",
+    href: "/",
+    label: "Homepage",
     sub: [
       { href: "/", label: "Gamuda Gardens" },      
       { href: "/showcase", label: "Gardens Park" },
     ],
   },
   {
+    href: "/homes",
     label: "Homes",
     sub: [
       { href: "/showcase", label: "All Work" },
@@ -77,13 +79,15 @@ const mainLinks = [
     ],
   },
     {
-    label: "Commercial",
+    href: "/township",
+    label: "Township",
     sub: [
-      { href: "/the-clove", label: "Overview" },
+      { href: "/Township", label: "Overview" },
       { href: "/the-clove", label: "Features" },
     ],
   },
   {
+    href: "/Leisure & Lifestyle",
     label: "Leisure & Lifestyle",
     sub: [
       { href: "/contact", label: "Get in Touch" },
@@ -91,6 +95,7 @@ const mainLinks = [
     ],
   },
     {
+    href: "/amenities",
     label: "Amenities",
     sub: [
       { href: "/contact", label: "Get in Touch" },
@@ -98,12 +103,24 @@ const mainLinks = [
     ],
   },
     {
+    href: "/location",
     label: "Location",
     sub: [
       { href: "/contact", label: "Get in Touch" },
       { href: "/contact", label: "Office" },
     ],
   },
+
+      {
+    href: "/event_system",
+    label: "Event",
+    sub: [
+      { href: "/contact", label: "Get in Touch" },
+      { href: "/contact", label: "Office" },
+    ],
+  },
+
+
   // {
   //   href: "/event_system",
   //   label: "Event",
