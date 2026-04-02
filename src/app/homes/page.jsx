@@ -156,7 +156,7 @@ export default function Homes() {
             </div>
           </div>
 
-        // Filters cards by selected tab
+        {/* // Filters cards by selected tab */}
           {filteredCards.length === 0 ? (
             <div className="text-center text-gray-600">No home cards found.</div>
           ) : (
