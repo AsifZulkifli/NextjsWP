@@ -29,8 +29,6 @@ const GET_TOWNSHIP_DATA = gql`
         title
         amenityFields {
           category
-          // Township page: Fetches and displays township map, amenities, highways, and awards. Integrates dynamic map and filtering.
-
           distance
           lat
           lng
@@ -202,12 +200,12 @@ export default function TownshipPage() {
 
   return (
     <main>
-            // Handles loading more awards
+            {/* // Handles loading more awards */}
       <section className="bg-[#f7f4ee] px-6 py-20">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-4xl font-serif text-[#1a3a2a] text-center mb-12">
             Explore Our <span className="text-[#42B58B]">Amenities</span>
-            // Handles year filter change
+           
           </h2>
 
           <TownshipMap
