@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 // const mainLinks = [
 //   {
@@ -62,25 +63,52 @@ import Link from "next/link";
 
 const mainLinks = [
   {
-    href: "/",
-    label: "Homepage",
-    sub: [{ href: "/", label: "Overview" }],
-  },
-  {
-    href: "/township",
     label: "Township",
-    sub: [], // Removed the two "/township" sub-items
+    sub: [
+      { href: "/", label: "Gamuda Gardens" },      
+      { href: "/showcase", label: "Gardens Park" },
+    ],
   },
   {
-    href: "/homes",
     label: "Homes",
-    sub: [], // Removed the two "/township" sub-items
+    sub: [
+      { href: "/showcase", label: "All Work" },
+      { href: "/showcase", label: "Featured" },
+    ],
+  },
+    {
+    label: "Commercial",
+    sub: [
+      { href: "/the-clove", label: "Overview" },
+      { href: "/the-clove", label: "Features" },
+    ],
   },
   {
-    href: "/event_system",
-    label: "Event",
-    sub: [], // Removed the two "/township" sub-items
+    label: "Leisure & Lifestyle",
+    sub: [
+      { href: "/contact", label: "Get in Touch" },
+      { href: "/contact", label: "Office" },
+    ],
   },
+    {
+    label: "Amenities",
+    sub: [
+      { href: "/contact", label: "Get in Touch" },
+      { href: "/contact", label: "Office" },
+    ],
+  },
+    {
+    label: "Location",
+    sub: [
+      { href: "/contact", label: "Get in Touch" },
+      { href: "/contact", label: "Office" },
+    ],
+  },
+  // {
+  //   href: "/event_system",
+  //   label: "Event",
+  //   sub: [], // Removed the two "/township" sub-items
+  // },
   // {
   //   href: "/showcase",
   //   label: "Showcase",
@@ -116,13 +144,14 @@ const bottomLinks = [
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
+  const pathname = usePathname();
 
   return (
     <>
       {/* Top bar */}
-      <header className="fixed top-0 left-0 right-0 z-50 px-6 py-5 flex items-center justify-between">
+      <header className="fixed top-0 left-0 right-0 z-50 px-6 flex items-center justify-between transition-all duration-300 py-5">
         <Link href="/" className="text-white z-50">
-          <img className="w-[160px]" src="/GP.png" alt="Logo" />
+          <img className={`${open ? "w-[0px]" : "w-[120px]"}`} src="/gg-logo.png" alt="Logo" />
         </Link>
 
         {/* Hamburger */}
@@ -145,9 +174,9 @@ export default function Navbar() {
       >
         {/* Left — image panel */}
         <div
-          className="hidden md:block w-[36%] h-full bg-cover bg-center transition-all duration-700"
+          className="hidden md:block w-[34%] h-full bg-cover bg-center transition-all duration-700"
           style={{
-            backgroundImage: "url('/menu-bg.jpg')",
+            backgroundImage: "url('/menu-img.png')",
             transform: open ? "translateX(0)" : "translateX(-20px)",
             opacity: open ? 1 : 0,
             transition: `opacity 0.6s ease, transform 0.6s ease`,
@@ -156,46 +185,59 @@ export default function Navbar() {
         />
 
         {/* Right — dark green panel */}
-        <div className="flex-1 bg-[#1e2e1e] flex flex-col">
+        <div className="flex-1 bg-[#263427] flex flex-col">
 
           {/* Nav content — main links + sub links */}
-          <div className="flex flex-1 overflow-hidden">
+          <div className="flex flex-1 overflow-hidden pt-10">
 
             {/* Main links */}
-            <nav className="flex flex-col justify-center gap-1 px-10 md:px-16 flex-1 border-r border-white/10">
+            <nav className="flex flex-col justify-center gap-1 px-10 md:px-20 flex-1 border-r border-white/10">
               {mainLinks.map(({ href, label }, i) => (
                 <div
-                  key={href}
+                  key={label}
                   className="flex items-center gap-4 group cursor-pointer"
                   onMouseEnter={() => setActiveIndex(i)}
                 >
-                  <Link
-                    href={href}
-                    onClick={() => setOpen(false)}
-                    className="text-[clamp(1.8rem,4vw,3.2rem)] font-serif font-normal uppercase tracking-wide text-white/80 hover:text-white transition-colors duration-200 leading-tight"
-                    style={{
-                      opacity: open ? 1 : 0,
-                      transform: open ? "translateY(0)" : "translateY(16px)",
-                      transition: `opacity 0.5s ease ${i * 80 + 100}ms, transform 0.5s ease ${i * 80 + 100}ms`,
-                    }}
-                  >
-                    {label}
-                  </Link>
+                  {href ? (
+                    <Link
+                      href={href}
+                      onClick={() => setOpen(false)}
+                      className="text-[36px] 3xl:text-[50px] py-4 font-maharlika font-normal uppercase tracking-wide text-white transition-colors duration-200 leading-tight"
+                      style={{
+                        opacity: open ? 1 : 0,
+                        transform: open ? "translateY(0)" : "translateY(16px)",
+                        transition: `opacity 0.5s ease ${i * 80 + 100}ms, transform 0.5s ease ${i * 80 + 100}ms`,
+                      }}
+                    >
+                      {label}
+                    </Link>
+                  ) : (
+                    <span
+                      className="text-[36px] 3xl:text-[50px] py-4 font-maharlika font-normal uppercase tracking-wide text-white transition-colors duration-200 leading-tight"
+                      style={{
+                        opacity: open ? 1 : 0,
+                        transform: open ? "translateY(0)" : "translateY(16px)",
+                        transition: `opacity 0.5s ease ${i * 80 + 100}ms, transform 0.5s ease ${i * 80 + 100}ms`,
+                      }}
+                    >
+                      {label}
+                    </span>
+                  )}
                   {activeIndex === i && (
-                    <span className="text-white/40 text-xl font-light leading-none mt-1">—</span>
+                    <span className="text-white text-[30px] font-bold leading-none">—</span>
                   )}
                 </div>
               ))}
             </nav>
 
             {/* Sub links */}
-            <div className="hidden md:flex flex-col justify-center px-10 w-[240px] gap-3">
+            <div className="hidden md:flex flex-col justify-start px-10 pt-[3%] w-[35%] gap-3">
               {mainLinks[activeIndex]?.sub.map(({ href, label }, i) => (
                 <Link
                   key={i}
                   href={href}
                   onClick={() => setOpen(false)}
-                  className="text-sm tracking-[0.15em] uppercase text-emerald-400/80 hover:text-emerald-300 transition-colors duration-200"
+                  className={`font-markpro text-[20px] 3xl:text-[24px] py-2 uppercase transition-colors duration-200 ${pathname === href ? "text-[#42B58B]" : "text-white/40 hover:text-white/70"}`}
                   style={{
                     opacity: open ? 1 : 0,
                     transition: `opacity 0.4s ease ${i * 60 + 300}ms`,
@@ -209,7 +251,7 @@ export default function Navbar() {
 
           {/* Bottom strip */}
           <div
-            className="border-t border-white/10 px-10 md:px-16 py-5 flex flex-wrap gap-x-8 gap-y-3 items-center"
+            className="border-t border-white/10 md:mx-20 py-12 flex flex-wrap gap-x-2 gap-y-3 items-center"
             style={{
               opacity: open ? 1 : 0,
               transition: "opacity 0.5s ease 400ms",
@@ -220,18 +262,22 @@ export default function Navbar() {
                 key={label}
                 href={href}
                 onClick={() => setOpen(false)}
-                className="text-[11px] tracking-[0.2em] uppercase text-white/50 hover:text-white transition-colors duration-200 flex items-center gap-1"
+                className="font-markpro text-[17px] 3xl:text-[24px] uppercase text-white bg-[#252E1D] rounded-[30px] py-2 px-4  hover:scale-105 transition-all duration-300 flex items-center gap-1"
               >
                 {label}
-                <span className="text-xs">↗</span>
+                <span className="text-[20px]">↗</span>
               </Link>
             ))}
 
             {/* Social */}
-            <div className="ml-auto flex items-center gap-3">
-              <span className="text-[11px] tracking-[0.2em] uppercase text-white/50">Follow Us</span>
-              <a href="#" className="w-7 h-7 rounded-full border border-white/30 flex items-center justify-center text-white/60 hover:text-white hover:border-white transition text-xs">f</a>
-              <a href="#" className="w-7 h-7 rounded-full border border-white/30 flex items-center justify-center text-white/60 hover:text-white hover:border-white transition text-xs">in</a>
+            <div className="flex items-center gap-1 bg-[#252E1D] rounded-full pl-4 pr-2 hover:scale-105 transition-all duration-300">
+              <span className="font-markpro text-[17px] 3xl:text-[24px] uppercase text-white rounded-[30px] py-2">Follow Us</span>
+              <a href="#" className="w-10 h-10 flex rounded-full items-center justify-center text-white text-sm hover:scale-105 transition-all duration-300">
+                <img src="icons/fb.svg"></img>
+              </a>
+              <a href="#" className="w-10 h-10 flex rounded-full items-center justify-center text-white text-sm hover:scale-105 transition-all duration-300">
+                <img src="icons/ig.svg"></img>
+              </a>
             </div>
           </div>
         </div>
