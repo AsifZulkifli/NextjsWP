@@ -67,6 +67,8 @@ export default function Homes() {
     const termMap = new Map();
 
     cards.forEach((card) => {
+      // Homes page: Fetches and displays a list of home cards with filtering and load more functionality. Uses Apollo Client for data fetching from WordPress GraphQL.
+
       card.homeCategories?.nodes?.forEach((term) => {
         if (!termMap.has(term.slug)) {
           termMap.set(term.slug, {
@@ -105,6 +107,7 @@ export default function Homes() {
   };
 
   if (loading) {
+      // Main component for displaying homes
     return (
       <main className="min-h-screen flex items-center justify-center bg-white">
         <p className="text-gray-500 text-sm uppercase tracking-[0.2em]">
@@ -112,6 +115,7 @@ export default function Homes() {
         </p>
       </main>
     );
+        // Fetches home cards from WordPress GraphQL
   }
 
   if (errorMsg) {
@@ -132,6 +136,7 @@ export default function Homes() {
                 {tabs.map((tab) => {
                   const isActive = activeTab === tab.slug;
 
+        // Builds tab list from home categories
                   return (
                     <button
                       key={tab.slug}
@@ -151,6 +156,7 @@ export default function Homes() {
             </div>
           </div>
 
+        // Filters cards by selected tab
           {filteredCards.length === 0 ? (
             <div className="text-center text-gray-600">No home cards found.</div>
           ) : (
@@ -161,11 +167,13 @@ export default function Homes() {
                   const subtitle = card.propertyFields?.subtitle || "";
                   const description = card.propertyFields?.description || "";
                   const price = card.propertyFields?.price || "";
+        // Handles tab change
                   const monthlyprice = card.propertyFields?.monthlyprice || "";
                   const featuresLink = card.propertyFields?.featureslink || "";
                   const learnMoreLink = card.propertyFields?.learnmorelink || "";
 
                   const learnMoreUrl = learnMoreLink
+        // Handles load more button
                     ? learnMoreLink
                     : card.slug
                     ? `/property/${card.slug}`

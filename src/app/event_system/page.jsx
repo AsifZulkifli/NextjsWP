@@ -53,6 +53,8 @@ export default function PastEventsPage() {
       })
       .catch((error) => {
         console.error("GraphQL fetch error:", error);
+        // Event System page: Fetches and displays a paginated list of past events from WordPress. Handles event card rendering and pagination.
+
         setErrorMsg(error.message || "Failed to fetch past events");
       })
       .finally(() => {
@@ -88,6 +90,7 @@ export default function PastEventsPage() {
   const handlePageChange = (page) => {
     setCurrentPage(page);
     window.scrollTo({
+        // Main component for displaying past events
       top: 0,
       behavior: "smooth",
     });
@@ -95,6 +98,7 @@ export default function PastEventsPage() {
 
   const formatDate = (value) => {
     if (!value) return "";
+          // Fetches events from WordPress GraphQL
 
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return value;
@@ -115,6 +119,7 @@ export default function PastEventsPage() {
     return date.toLocaleTimeString("en-GB", {
       hour: "numeric",
       minute: "2-digit",
+          // Handles responsive items per page
       hour12: true,
     }).toLowerCase();
   };
@@ -133,13 +138,16 @@ export default function PastEventsPage() {
     const start = formatTime(startTime);
     const end = formatTime(endTime);
 
+          // Calculates total pages for pagination
     if (start && end) return `${start} - ${end}`;
     if (start) return start;
+          // Returns events for the current page
     if (end) return end;
     return "";
   };
 
   if (loading) {
+          // Handles page change
     return (
       <main className="flex min-h-screen items-center justify-center bg-white">
         <p className="text-sm uppercase tracking-[0.2em] text-gray-500">
@@ -148,6 +156,7 @@ export default function PastEventsPage() {
       </main>
     );
   }
+          // Formats date for display
 
   if (errorMsg) {
     return (
@@ -159,6 +168,7 @@ export default function PastEventsPage() {
 
   return (
     <main className="pt-28 md:pt-32">
+          // Formats time for display
       <section className="bg-[#f5f0e8] px-6 py-20 md:px-10 lg:px-16">
         <div className="mx-auto max-w-7xl">
           <div className="mb-14 text-center">
@@ -170,6 +180,7 @@ export default function PastEventsPage() {
             </p>
           </div>
 
+          // Formats date range for event
           {events.length === 0 ? (
             <div className="py-12 text-center text-gray-500">
               No past events available.
@@ -179,6 +190,7 @@ export default function PastEventsPage() {
               <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
                 {paginatedEvents.map((event) => {
                   const fields = event?.eventDetails || {};
+          // Formats time range for event
                   const eventTitle = event?.title || "Event";
                   const eventImage =
                     fields?.image?.node?.sourceUrl || "/placeholder.jpg";

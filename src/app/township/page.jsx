@@ -29,6 +29,8 @@ const GET_TOWNSHIP_DATA = gql`
         title
         amenityFields {
           category
+          // Township page: Fetches and displays township map, amenities, highways, and awards. Integrates dynamic map and filtering.
+
           distance
           lat
           lng
@@ -102,6 +104,7 @@ export default function TownshipPage() {
               ? fields.category[0]
               : fields.category || "Other";
 
+          // Main township page component
             return {
               id: item.id,
               name: item.title,
@@ -113,6 +116,7 @@ export default function TownshipPage() {
               },
               icon: fields?.icon?.node?.sourceUrl || "",
             };
+            // Fetches township data from WordPress GraphQL
           })
           .filter(
             (item) =>
@@ -175,6 +179,7 @@ export default function TownshipPage() {
     setSelectedYear(e.target.value);
     setVisibleAwardsCount(3);
   };
+            // Builds year options for awards filter
 
   if (loading) {
     return (
@@ -182,6 +187,7 @@ export default function TownshipPage() {
         <p className="text-gray-500 text-sm uppercase tracking-[0.2em]">
           Loading...
         </p>
+            // Filters awards by selected year
       </main>
     );
   }
@@ -196,10 +202,12 @@ export default function TownshipPage() {
 
   return (
     <main>
+            // Handles loading more awards
       <section className="bg-[#f7f4ee] px-6 py-20">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-4xl font-serif text-[#1a3a2a] text-center mb-12">
             Explore Our <span className="text-[#42B58B]">Amenities</span>
+            // Handles year filter change
           </h2>
 
           <TownshipMap

@@ -1,3 +1,5 @@
+// TownshipMap component: Renders an interactive map with amenities and highways using react-leaflet. Handles map pins, popups, and category toggles.
+
 "use client";
 
 import { useMemo, useState } from "react";
@@ -77,6 +79,7 @@ const categoryColorMap = {
   WELLNESS: "red",
 };
 
+// Returns color for map pin based on type
 function getPinColor(type) {
   switch (type) {
     case "green":
@@ -92,6 +95,7 @@ function getPinColor(type) {
   }
 }
 
+// Creates a custom amenity icon for the map
 function createAmenityIcon(type = "green") {
   const bg = getPinColor(type);
 
@@ -123,6 +127,7 @@ function createAmenityIcon(type = "green") {
   });
 }
 
+// Creates a custom township badge icon
 function createTownshipBadge(label = "GAMUDA GARDENS") {
   return L.divIcon({
     className: "township-badge-icon",
@@ -157,6 +162,7 @@ function createTownshipBadge(label = "GAMUDA GARDENS") {
   });
 }
 
+// Fits map bounds to all points
 function FitBounds({ points }) {
   const [MapHooks, setMapHooks] = useState(null);
 
@@ -181,6 +187,7 @@ function FitBounds({ points }) {
   return <Inner />;
 }
 
+// Renders an amenity icon with the given Lucide icon
 function AmenityIcon({ Icon }) {
   return (
     <div className="flex h-9 w-9 items-center justify-center rounded-full border border-[#2FAE77] text-[#2FAE77]">
@@ -189,6 +196,7 @@ function AmenityIcon({ Icon }) {
   );
 }
 
+// Main map component for township amenities and highways
 export default function TownshipMap({
   mapConfig,
   amenities,
